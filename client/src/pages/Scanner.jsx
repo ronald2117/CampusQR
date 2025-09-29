@@ -15,6 +15,7 @@ const Scanner = () => {
   const [cameras, setCameras] = useState([])
   const [selectedCamera, setSelectedCamera] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showResultDialog, setShowResultDialog] = useState(false)
 
   useEffect(() => {
     // Check for camera support and get available cameras
@@ -29,10 +30,19 @@ const Scanner = () => {
           return
         }
 
-        // Request camera permission first
+        // Request camera permission first, preferring back camera
         try {
-          await navigator.mediaDevices.getUserMedia({ video: true })
-          console.log('Camera permission granted')
+          // Try to request back camera first
+          try {
+            await navigator.mediaDevices.getUserMedia({ 
+              video: { facingMode: 'environment' } 
+            })
+            console.log('Back camera permission granted')
+          } catch (backCamError) {
+            // Fallback to any camera
+            await navigator.mediaDevices.getUserMedia({ video: true })
+            console.log('Camera permission granted (fallback)')
+          }
         } catch (permError) {
           console.error('Camera permission denied:', permError)
           setError('Camera permission denied. Please allow camera access and refresh the page.')
@@ -45,12 +55,31 @@ const Scanner = () => {
         setCameras(availableCameras)
         
         if (availableCameras.length > 0) {
-          // Prefer back camera for mobile
-          const backCamera = availableCameras.find(camera => 
-            camera.label.toLowerCase().includes('back') || 
-            camera.label.toLowerCase().includes('environment')
-          )
-          setSelectedCamera(backCamera ? backCamera.id : availableCameras[0].id)
+          // Enhanced back camera detection for mobile scanning
+          const backCamera = availableCameras.find(camera => {
+            const label = camera.label.toLowerCase()
+            return (
+              label.includes('back') || 
+              label.includes('environment') ||
+              label.includes('rear') ||
+              label.includes('facing back') ||
+              // Check if facingMode is available and is 'environment'
+              (camera.facingMode && camera.facingMode === 'environment')
+            )
+          })
+          
+          // If no back camera found by label, try to find one by device ID patterns
+          const fallbackBackCamera = !backCamera ? availableCameras.find(camera => {
+            // Some devices have back cameras with specific ID patterns
+            return camera.id && (camera.id.includes('back') || camera.id.includes('1'))
+          }) : null
+          
+          const defaultCamera = backCamera || fallbackBackCamera || availableCameras[0]
+          setSelectedCamera(defaultCamera.id)
+          
+          console.log('Available cameras:', availableCameras.map(c => ({ id: c.id, label: c.label })))
+          console.log('Default camera selected:', defaultCamera.label || defaultCamera.id)
+          console.log('Back camera found:', !!backCamera)
         } else {
           setError('No cameras found. This may be a browser compatibility issue.')
         }
@@ -77,8 +106,23 @@ const Scanner = () => {
       setError('')
       setResult(null)
       
+      // Stop existing scanner if running
+      if (qrScanner) {
+        qrScanner.stop()
+        qrScanner.destroy()
+        setQrScanner(null)
+      }
+
       // Mobile-specific configuration
       const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      
+      // Find the selected camera info for better constraints
+      const selectedCameraInfo = cameras.find(cam => cam.id === selectedCamera)
+      const isBackCamera = selectedCameraInfo && (
+        selectedCameraInfo.label.toLowerCase().includes('back') || 
+        selectedCameraInfo.label.toLowerCase().includes('environment') ||
+        selectedCameraInfo.label.toLowerCase().includes('rear')
+      )
       
       const scanner = new QrScanner(
         videoRef.current,
@@ -86,13 +130,29 @@ const Scanner = () => {
         {
           highlightScanRegion: true,
           highlightCodeOutline: true,
-          preferredCamera: selectedCamera || (isMobile ? 'environment' : 'user'),
+          // Use the specific camera ID or fallback to facingMode
+          preferredCamera: selectedCamera || (isBackCamera || isMobile ? 'environment' : 'user'),
           maxScansPerSecond: 2, // Reduce for mobile performance
           returnDetailedScanResult: false
         }
       )
 
-      console.log('Starting scanner with camera:', selectedCamera)
+      console.log('Starting scanner with camera:', selectedCamera, selectedCameraInfo?.label)
+      
+      // Try to set the specific camera
+      if (selectedCamera) {
+        try {
+          await scanner.setCamera(selectedCamera)
+          console.log('Successfully set camera:', selectedCamera)
+        } catch (cameraError) {
+          console.warn('Failed to set specific camera, using default constraints:', cameraError)
+          // If setting specific camera fails, try with facingMode constraint
+          if (isBackCamera || isMobile) {
+            await scanner.setCamera('environment')
+          }
+        }
+      }
+      
       await scanner.start()
       setQrScanner(scanner)
       setScanning(true)
@@ -123,6 +183,29 @@ const Scanner = () => {
     setScanning(false)
   }
 
+  const switchCamera = async (cameraId) => {
+    const selectedCameraInfo = cameras.find(cam => cam.id === cameraId)
+    console.log('Switching to camera:', cameraId, selectedCameraInfo?.label)
+    setSelectedCamera(cameraId)
+    
+    if (scanning && qrScanner) {
+      // If currently scanning, restart with new camera
+      try {
+        console.log('Attempting to switch camera while scanning...')
+        await qrScanner.setCamera(cameraId)
+        console.log('Camera switched successfully to:', selectedCameraInfo?.label || cameraId)
+      } catch (error) {
+        console.error('Failed to switch camera, restarting scanner:', error)
+        // Fallback: restart scanner with new camera
+        stopScanning()
+        setTimeout(() => {
+          console.log('Restarting scanner with new camera')
+          startScanning()
+        }, 1000) // Increased delay for better stability
+      }
+    }
+  }
+
   const handleScanResult = async (qrData) => {
     if (!qrData || loading) return
 
@@ -131,11 +214,7 @@ const Scanner = () => {
       const response = await scannerService.verifyQR(qrData, location)
       setResult(response.data)
       stopScanning()
-      
-      // Auto-clear result after 5 seconds
-      setTimeout(() => {
-        setResult(null)
-      }, 5000)
+      setShowResultDialog(true)
     } catch (error) {
       console.error('QR verification failed:', error)
       setError(error.response?.data?.message || 'QR code verification failed')
@@ -143,6 +222,8 @@ const Scanner = () => {
         accessGranted: false,
         reason: error.response?.data?.message || 'Invalid QR code'
       })
+      stopScanning()
+      setShowResultDialog(true)
     } finally {
       setLoading(false)
     }
@@ -158,14 +239,15 @@ const Scanner = () => {
       setResult(response.data)
       setManualStudentId('')
       setManualReason('')
-      
-      // Auto-clear result after 5 seconds
-      setTimeout(() => {
-        setResult(null)
-      }, 5000)
+      setShowResultDialog(true)
     } catch (error) {
       console.error('Manual verification failed:', error)
       setError(error.response?.data?.message || 'Manual verification failed')
+      setResult({
+        accessGranted: false,
+        reason: error.response?.data?.message || 'Manual verification failed'
+      })
+      setShowResultDialog(true)
     } finally {
       setLoading(false)
     }
@@ -174,6 +256,14 @@ const Scanner = () => {
   const clearResult = () => {
     setResult(null)
     setError('')
+    setShowResultDialog(false)
+  }
+
+  const startNewScan = () => {
+    clearResult()
+    if (!manualMode) {
+      startScanning()
+    }
   }
 
   return (
@@ -192,6 +282,28 @@ const Scanner = () => {
             <p>Cameras detected: {cameras.length}</p>
             <p>Selected camera: {selectedCamera || 'None'}</p>
             <p>HTTPS: {window.location.protocol === 'https:' ? 'Yes' : 'No (required for camera)'}</p>
+            {cameras.length > 0 && (
+              <details style={{ marginTop: '0.5rem' }}>
+                <summary style={{ cursor: 'pointer', fontSize: '0.8rem' }}>Camera Details</summary>
+                <div style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}>
+                  {cameras.map((camera, index) => {
+                    const isBack = camera.label.toLowerCase().includes('back') || 
+                                 camera.label.toLowerCase().includes('environment') || 
+                                 camera.label.toLowerCase().includes('rear')
+                    return (
+                      <p key={camera.id} style={{ margin: '0.25rem 0' }}>
+                        {index + 1}. {camera.label || 'Unknown'} 
+                        <span style={{ color: isBack ? 'green' : 'blue' }}>
+                          {isBack ? ' (Back Camera)' : ' (Front Camera)'}
+                        </span>
+                        <br />
+                        <span style={{ color: '#666', fontSize: '0.7rem' }}>ID: {camera.id}</span>
+                      </p>
+                    )
+                  })}
+                </div>
+              </details>
+            )}
           </div>
         </details>
       </div>
@@ -229,18 +341,65 @@ const Scanner = () => {
             <div className="card-header">
               <h3 className="card-title">📱 QR Code Scanner</h3>
               {cameras.length > 1 && (
-                <select
-                  value={selectedCamera}
-                  onChange={(e) => setSelectedCamera(e.target.value)}
-                  style={{ marginTop: '0.5rem', maxWidth: '200px' }}
-                  disabled={scanning}
-                >
-                  {cameras.map((camera) => (
-                    <option key={camera.id} value={camera.id}>
-                      {camera.label || `Camera ${camera.id}`}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ marginTop: '0.5rem' }}>
+                  <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.25rem', display: 'block' }}>
+                    Camera:
+                  </label>
+                  <select
+                    value={selectedCamera}
+                    onChange={(e) => switchCamera(e.target.value)}
+                    style={{ maxWidth: '300px' }}
+                  >
+                    {cameras.map((camera) => {
+                      const isBack = camera.label.toLowerCase().includes('back') || 
+                                   camera.label.toLowerCase().includes('environment') || 
+                                   camera.label.toLowerCase().includes('rear')
+                      const displayName = camera.label || `Camera ${camera.id}`
+                      return (
+                        <option key={camera.id} value={camera.id}>
+                          {displayName} {isBack ? '📷 (Back)' : '🤳 (Front)'}
+                        </option>
+                      )
+                    })}
+                  </select>
+                  {cameras.length > 1 && (
+                    <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => {
+                          const backCam = cameras.find(cam => 
+                            cam.label.toLowerCase().includes('back') || 
+                            cam.label.toLowerCase().includes('environment') || 
+                            cam.label.toLowerCase().includes('rear')
+                          )
+                          if (backCam) switchCamera(backCam.id)
+                        }}
+                        className="btn btn-outline btn-sm"
+                        disabled={!cameras.some(cam => 
+                          cam.label.toLowerCase().includes('back') || 
+                          cam.label.toLowerCase().includes('environment') || 
+                          cam.label.toLowerCase().includes('rear')
+                        )}
+                      >
+                        📷 Use Back Camera
+                      </button>
+                      <button
+                        onClick={() => {
+                          const frontCam = cameras.find(cam => 
+                            cam.label.toLowerCase().includes('front') || 
+                            cam.label.toLowerCase().includes('user') || 
+                            (!cam.label.toLowerCase().includes('back') && 
+                             !cam.label.toLowerCase().includes('environment') && 
+                             !cam.label.toLowerCase().includes('rear'))
+                          )
+                          if (frontCam) switchCamera(frontCam.id)
+                        }}
+                        className="btn btn-outline btn-sm"
+                      >
+                        🤳 Use Front Camera
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
             <div className="card-body">
@@ -351,7 +510,7 @@ const Scanner = () => {
                 </div>
               )}
               
-              {error && (
+              {error && !showResultDialog && (
                 <div className="alert alert-error" style={{ marginTop: '1rem' }}>
                   <h4>⚠️ Camera Issue</h4>
                   <p>{error}</p>
@@ -434,32 +593,53 @@ const Scanner = () => {
           </div>
         )}
 
-        {/* Results Display */}
-        {(result || error) && (
-          <div className="card">
-            <div className="card-body">
+        {/* Result Dialog Modal */}
+        {showResultDialog && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem'
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            }}>
               {result ? (
                 <div style={{
                   textAlign: 'center',
                   padding: '2rem'
                 }}>
                   <div style={{
-                    width: '100px',
-                    height: '100px',
+                    width: '80px',
+                    height: '80px',
                     borderRadius: '50%',
                     backgroundColor: result.accessGranted ? '#dcfce7' : '#fef2f2',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     margin: '0 auto 1.5rem',
-                    fontSize: '3rem'
+                    fontSize: '2.5rem'
                   }}>
                     {result.accessGranted ? '✅' : '❌'}
                   </div>
 
                   <h3 style={{
                     color: result.accessGranted ? 'var(--success-color)' : 'var(--error-color)',
-                    marginBottom: '1rem'
+                    marginBottom: '1rem',
+                    fontSize: '1.5rem'
                   }}>
                     {result.accessGranted ? 'ACCESS GRANTED' : 'ACCESS DENIED'}
                   </h3>
@@ -478,41 +658,41 @@ const Scanner = () => {
                             src={result.student.photo_url}
                             alt={result.student.name}
                             style={{
-                              width: '80px',
-                              height: '80px',
+                              width: '60px',
+                              height: '60px',
                               borderRadius: '50%',
                               objectFit: 'cover'
                             }}
                           />
                         ) : (
                           <div style={{
-                            width: '80px',
-                            height: '80px',
+                            width: '60px',
+                            height: '60px',
                             borderRadius: '50%',
                             backgroundColor: '#e2e8f0',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: '2rem'
+                            fontSize: '1.5rem'
                           }}>
                             👤
                           </div>
                         )}
                         
                         <div>
-                          <h4 style={{ margin: '0 0 0.5rem' }}>{result.student.name}</h4>
-                          <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)' }}>
+                          <h4 style={{ margin: '0 0 0.5rem', fontSize: '1.125rem' }}>{result.student.name}</h4>
+                          <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                             <strong>ID:</strong> {result.student.student_id}
                           </p>
-                          <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)' }}>
+                          <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                             <strong>Course:</strong> {result.student.course}
                           </p>
-                          <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)' }}>
+                          <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                             <strong>Year:</strong> {result.student.year_level}
                           </p>
                           <span className={`badge ${
                             result.student.enrollment_status === 'active' ? 'badge-success' : 'badge-warning'
-                          }`}>
+                          }`} style={{ fontSize: '0.75rem' }}>
                             {result.student.enrollment_status}
                           </span>
                         </div>
@@ -521,7 +701,7 @@ const Scanner = () => {
                   )}
 
                   {result.reason && (
-                    <div className="alert alert-warning">
+                    <div className="alert alert-warning" style={{ marginBottom: '1.5rem' }}>
                       <strong>Reason:</strong> {result.reason}
                     </div>
                   )}
@@ -529,35 +709,66 @@ const Scanner = () => {
                   <div style={{
                     fontSize: '0.875rem',
                     color: 'var(--text-muted)',
-                    marginBottom: '1.5rem'
+                    marginBottom: '2rem',
+                    textAlign: 'left',
+                    backgroundColor: '#f1f5f9',
+                    padding: '1rem',
+                    borderRadius: '8px'
                   }}>
                     <p style={{ margin: '0.25rem 0' }}>
-                      <strong>Location:</strong> {result.location}
+                      <strong>📍 Location:</strong> {result.location}
                     </p>
                     <p style={{ margin: '0.25rem 0' }}>
-                      <strong>Time:</strong> {new Date(result.timestamp).toLocaleString()}
+                      <strong>🕒 Time:</strong> {new Date(result.timestamp).toLocaleString()}
                     </p>
                     {result.verificationType && (
                       <p style={{ margin: '0.25rem 0' }}>
-                        <strong>Method:</strong> {result.verificationType === 'manual' ? 'Manual Verification' : 'QR Code Scan'}
+                        <strong>🔍 Method:</strong> {result.verificationType === 'manual' ? 'Manual Verification' : 'QR Code Scan'}
                       </p>
                     )}
                   </div>
 
-                  <button onClick={clearResult} className="btn btn-outline">
-                    ✓ Continue Scanning
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                    <button onClick={startNewScan} className="btn btn-primary">
+                      📱 Scan Again
+                    </button>
+                    <button onClick={clearResult} className="btn btn-outline">
+                      ✓ Done
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div className="alert alert-error">
-                  <strong>Error:</strong> {error}
-                  <button
-                    onClick={clearResult}
-                    className="btn btn-outline btn-sm"
-                    style={{ marginLeft: '1rem' }}
-                  >
-                    Retry
-                  </button>
+                <div style={{ padding: '2rem', textAlign: 'center' }}>
+                  <div style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    backgroundColor: '#fef2f2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1.5rem',
+                    fontSize: '2.5rem'
+                  }}>
+                    ⚠️
+                  </div>
+                  
+                  <h3 style={{ color: 'var(--error-color)', marginBottom: '1rem' }}>
+                    Scan Failed
+                  </h3>
+                  
+                  <div className="alert alert-error" style={{ marginBottom: '2rem' }}>
+                    {error}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                    <button onClick={startNewScan} className="btn btn-primary">
+                      🔄 Try Again
+                    </button>
+                    <button onClick={clearResult} className="btn btn-outline">
+                      ✓ Done
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

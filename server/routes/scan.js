@@ -29,7 +29,7 @@ router.post('/verify', auth, async (req, res) => {
     }
 
     // Get full student details from database
-    const [students] = await pool.execute(
+    const [students] = await pool.query(
       `SELECT id, student_id, name, email, course, year_level, 
               enrollment_status, photo_url, created_at
        FROM students 
@@ -60,7 +60,7 @@ router.post('/verify', auth, async (req, res) => {
     }
 
     // Log the access attempt
-    await pool.execute(
+    await pool.query(
       `INSERT INTO access_logs (student_id, scanned_by, location, 
        access_granted, qr_data, created_at) 
        VALUES (?, ?, ?, ?, ?, NOW())`,
@@ -92,7 +92,7 @@ router.post('/verify', auth, async (req, res) => {
     
     // Log failed attempt
     try {
-      await pool.execute(
+      await pool.query(
         `INSERT INTO access_logs (scanned_by, location, access_granted, 
          qr_data, error_message, created_at) 
          VALUES (?, ?, ?, ?, ?, NOW())`,
@@ -122,7 +122,7 @@ router.post('/manual-verify', auth, async (req, res) => {
     }
 
     // Get student details
-    const [students] = await pool.execute(
+    const [students] = await pool.query(
       `SELECT id, student_id, name, email, course, year_level, 
               enrollment_status, photo_url
        FROM students 
@@ -140,7 +140,7 @@ router.post('/manual-verify', auth, async (req, res) => {
     const student = students[0];
 
     // Log manual verification
-    await pool.execute(
+    await pool.query(
       `INSERT INTO access_logs (student_id, scanned_by, location, 
        access_granted, verification_type, manual_reason, created_at) 
        VALUES (?, ?, ?, ?, ?, ?, NOW())`,
