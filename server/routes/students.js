@@ -58,14 +58,10 @@ router.get('/', auth, async (req, res) => {
       });
     }
 
-    let query = `
-      SELECT id, student_id, name, email, course, year_level, 
-             enrollment_status, photo_url, created_at, updated_at
-      FROM students
-      WHERE active = true
-    `;
+    // Base query
+    let query = `SELECT id, student_id, name, email, course, year_level, enrollment_status, photo_url, created_at, updated_at FROM students WHERE active = true`;
     
-    let countQuery = 'SELECT COUNT(*) as total FROM students WHERE active = true';
+    let countQuery = `SELECT COUNT(*) as total FROM students WHERE active = true`;
     let queryParams = [];
     let countParams = [];
 
@@ -73,8 +69,8 @@ router.get('/', auth, async (req, res) => {
       query += ` AND (name LIKE ? OR student_id LIKE ? OR email LIKE ? OR course LIKE ?)`;
       countQuery += ` AND (name LIKE ? OR student_id LIKE ? OR email LIKE ? OR course LIKE ?)`;
       const searchParam = `%${search}%`;
-      queryParams = [searchParam, searchParam, searchParam, searchParam];
-      countParams = [searchParam, searchParam, searchParam, searchParam];
+      queryParams.push(searchParam, searchParam, searchParam, searchParam);
+      countParams.push(searchParam, searchParam, searchParam, searchParam);
     }
 
     query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
@@ -85,8 +81,8 @@ router.get('/', auth, async (req, res) => {
     console.log('Count Query:', countQuery);
     console.log('Count Params:', countParams);
 
-    const [students] = await pool.execute(query, queryParams);
-    const [countResult] = await pool.execute(countQuery, countParams);
+    const [students] = await pool.query(query, queryParams);
+    const [countResult] = await pool.query(countQuery, countParams);
     
     const totalStudents = countResult[0].total;
     const totalPages = Math.ceil(totalStudents / limit);

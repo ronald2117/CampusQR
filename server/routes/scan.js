@@ -229,8 +229,8 @@ router.get('/logs', auth, async (req, res) => {
     query += ` ORDER BY al.created_at DESC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
-    const [logs] = await pool.execute(query, params);
-    const [countResult] = await pool.execute(countQuery, params.slice(0, -2));
+    const [logs] = await pool.query(query, params);
+    const [countResult] = await pool.query(countQuery, params.slice(0, -2));
     
     const totalLogs = countResult[0].total;
     const totalPages = Math.ceil(totalLogs / limit);
