@@ -20,14 +20,43 @@ const Scanner = () => {
     // Check for camera support and get available cameras
     const initializeCamera = async () => {
       try {
+        // Check if camera is supported
+        const hasCamera = await QrScanner.hasCamera()
+        console.log('Has camera:', hasCamera)
+        
+        if (!hasCamera) {
+          setError('No camera detected on this device.')
+          return
+        }
+
+        // Request camera permission first
+        try {
+          await navigator.mediaDevices.getUserMedia({ video: true })
+          console.log('Camera permission granted')
+        } catch (permError) {
+          console.error('Camera permission denied:', permError)
+          setError('Camera permission denied. Please allow camera access and refresh the page.')
+          return
+        }
+
+        // List available cameras
         const availableCameras = await QrScanner.listCameras(true)
+        console.log('Available cameras:', availableCameras)
         setCameras(availableCameras)
+        
         if (availableCameras.length > 0) {
-          setSelectedCamera(availableCameras[0].id)
+          // Prefer back camera for mobile
+          const backCamera = availableCameras.find(camera => 
+            camera.label.toLowerCase().includes('back') || 
+            camera.label.toLowerCase().includes('environment')
+          )
+          setSelectedCamera(backCamera ? backCamera.id : availableCameras[0].id)
+        } else {
+          setError('No cameras found. This may be a browser compatibility issue.')
         }
       } catch (error) {
-        console.error('Failed to list cameras:', error)
-        setError('Camera access not available. Please check permissions.')
+        console.error('Failed to initialize camera:', error)
+        setError(`Camera initialization failed: ${error.message}. Try refreshing the page or using a different browser.`)
       }
     }
 
@@ -48,22 +77,40 @@ const Scanner = () => {
       setError('')
       setResult(null)
       
+      // Mobile-specific configuration
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      
       const scanner = new QrScanner(
         videoRef.current,
         (result) => handleScanResult(result.data),
         {
           highlightScanRegion: true,
           highlightCodeOutline: true,
-          preferredCamera: selectedCamera || 'environment'
+          preferredCamera: selectedCamera || (isMobile ? 'environment' : 'user'),
+          maxScansPerSecond: 2, // Reduce for mobile performance
+          returnDetailedScanResult: false
         }
       )
 
+      console.log('Starting scanner with camera:', selectedCamera)
       await scanner.start()
       setQrScanner(scanner)
       setScanning(true)
+      
+      console.log('Scanner started successfully')
     } catch (error) {
       console.error('Failed to start camera:', error)
-      setError('Failed to access camera. Please check permissions and try again.')
+      
+      // More specific error messages
+      if (error.name === 'NotAllowedError') {
+        setError('Camera permission denied. Please allow camera access in your browser settings.')
+      } else if (error.name === 'NotFoundError') {
+        setError('No camera found. Please check if your device has a working camera.')
+      } else if (error.name === 'NotSupportedError') {
+        setError('Camera not supported by this browser. Try using Chrome, Safari, or Firefox.')
+      } else {
+        setError(`Camera error: ${error.message}. Try refreshing the page.`)
+      }
     }
   }
 
@@ -137,6 +184,16 @@ const Scanner = () => {
         <p style={{ margin: 0, color: 'var(--text-muted)' }}>
           Scan student QR codes or perform manual verification
         </p>
+        {/* Debug info for mobile */}
+        <details style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+          <summary style={{ cursor: 'pointer' }}>📱 Debug Info</summary>
+          <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
+            <p>User Agent: {navigator.userAgent}</p>
+            <p>Cameras detected: {cameras.length}</p>
+            <p>Selected camera: {selectedCamera || 'None'}</p>
+            <p>HTTPS: {window.location.protocol === 'https:' ? 'Yes' : 'No (required for camera)'}</p>
+          </div>
+        </details>
       </div>
 
       {/* Location Input */}
@@ -274,9 +331,45 @@ const Scanner = () => {
                 )}
               </div>
 
-              {cameras.length === 0 && (
+              {cameras.length === 0 && !error && (
                 <div className="alert alert-warning" style={{ marginTop: '1rem' }}>
-                  No cameras detected. Please ensure your device has a camera and you've granted camera permissions.
+                  <h4>📱 Camera Setup Required</h4>
+                  <p>To use QR scanning on mobile:</p>
+                  <ol style={{ textAlign: 'left', marginTop: '1rem' }}>
+                    <li>Allow camera permissions when prompted</li>
+                    <li>Make sure you're using a supported browser (Chrome, Safari, Firefox)</li>
+                    <li>Try refreshing the page</li>
+                    <li>If still not working, use Manual Mode instead</li>
+                  </ol>
+                  <button 
+                    onClick={() => window.location.reload()} 
+                    className="btn btn-outline"
+                    style={{ marginTop: '1rem' }}
+                  >
+                    🔄 Refresh Page
+                  </button>
+                </div>
+              )}
+              
+              {error && (
+                <div className="alert alert-error" style={{ marginTop: '1rem' }}>
+                  <h4>⚠️ Camera Issue</h4>
+                  <p>{error}</p>
+                  <div style={{ marginTop: '1rem' }}>
+                    <button 
+                      onClick={() => window.location.reload()} 
+                      className="btn btn-outline btn-sm"
+                      style={{ marginRight: '0.5rem' }}
+                    >
+                      🔄 Refresh
+                    </button>
+                    <button 
+                      onClick={() => setManualMode(true)} 
+                      className="btn btn-primary btn-sm"
+                    >
+                      ✏️ Use Manual Mode
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
