@@ -11,7 +11,16 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log('Login attempt:', { 
+      email, 
+      password: password ? '[PROVIDED]' : '[MISSING]',
+      userAgent: req.get('User-Agent'),
+      ip: req.ip,
+      body: req.body
+    });
+
     if (!email || !password) {
+      console.log('Missing email or password');
       return res.status(400).json({
         success: false,
         message: 'Email and password are required'
@@ -19,12 +28,13 @@ router.post('/login', async (req, res) => {
     }
 
     // Check if user exists
-    const [users] = await pool.execute(
+    const [users] = await pool.query(
       'SELECT * FROM users WHERE email = ? AND active = true',
       [email]
     );
 
     if (users.length === 0) {
+      console.log('User not found:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -36,6 +46,7 @@ router.post('/login', async (req, res) => {
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      console.log('Invalid password for user:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -54,7 +65,7 @@ router.post('/login', async (req, res) => {
     );
 
     // Update last login
-    await pool.execute(
+    await pool.query(
       'UPDATE users SET last_login = NOW() WHERE id = ?',
       [user.id]
     );
