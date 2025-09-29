@@ -30,7 +30,13 @@ app.use(limiter);
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    /^http:\/\/192\.168\.\d+\.\d+:5173$/,
+    /^http:\/\/10\.\d+\.\d+\.\d+:5173$/,
+    /^http:\/\/172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+:5173$/
+  ],
   credentials: true
 }));
 
@@ -102,9 +108,10 @@ const startServer = async () => {
       process.exit(1);
     }
     
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`📊 Local: http://localhost:${PORT}/api/health`);
+      console.log(`🌐 Network: http://0.0.0.0:${PORT}/api/health`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
