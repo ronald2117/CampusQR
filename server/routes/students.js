@@ -47,8 +47,16 @@ router.get('/', auth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search || '';
+    const search = req.query.search?.trim() || '';
     const offset = (page - 1) * limit;
+
+    // Ensure parameters are valid integers
+    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1 || limit > 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid pagination parameters'
+      });
+    }
 
     let query = `
       SELECT id, student_id, name, email, course, year_level, 
@@ -58,20 +66,27 @@ router.get('/', auth, async (req, res) => {
     `;
     
     let countQuery = 'SELECT COUNT(*) as total FROM students WHERE active = true';
-    let params = [];
+    let queryParams = [];
+    let countParams = [];
 
-    if (search) {
+    if (search && search.length > 0) {
       query += ` AND (name LIKE ? OR student_id LIKE ? OR email LIKE ? OR course LIKE ?)`;
       countQuery += ` AND (name LIKE ? OR student_id LIKE ? OR email LIKE ? OR course LIKE ?)`;
       const searchParam = `%${search}%`;
-      params = [searchParam, searchParam, searchParam, searchParam];
+      queryParams = [searchParam, searchParam, searchParam, searchParam];
+      countParams = [searchParam, searchParam, searchParam, searchParam];
     }
 
     query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
-    params.push(limit, offset);
+    queryParams.push(limit, offset);
 
-    const [students] = await pool.execute(query, params);
-    const [countResult] = await pool.execute(countQuery, search ? params.slice(0, 4) : []);
+    console.log('Query:', query);
+    console.log('Query Params:', queryParams);
+    console.log('Count Query:', countQuery);
+    console.log('Count Params:', countParams);
+
+    const [students] = await pool.execute(query, queryParams);
+    const [countResult] = await pool.execute(countQuery, countParams);
     
     const totalStudents = countResult[0].total;
     const totalPages = Math.ceil(totalStudents / limit);

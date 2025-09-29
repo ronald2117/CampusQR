@@ -79,7 +79,7 @@ const Layout = ({ children }) => {
             📱
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600' }}>
+            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: "white" }}>
               CampusQR
             </h2>
             <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
