@@ -84,6 +84,12 @@ router.get('/', auth, async (req, res) => {
     const [students] = await pool.query(query, queryParams);
     const [countResult] = await pool.query(countQuery, countParams);
     
+    // Convert relative photo URLs to full URLs
+    const studentsWithFullUrls = students.map(student => ({
+      ...student,
+      photo_url: student.photo_url ? `${req.protocol}://${req.get('host')}${student.photo_url}` : null
+    }));
+    
     const totalStudents = countResult[0].total;
     const totalPages = Math.ceil(totalStudents / limit);
 
@@ -91,7 +97,7 @@ router.get('/', auth, async (req, res) => {
       success: true,
       message: 'Students retrieved successfully',
       data: {
-        students,
+        students: studentsWithFullUrls,
         pagination: {
           currentPage: page,
           totalPages,
@@ -116,7 +122,7 @@ router.get('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [students] = await pool.execute(
+    const [students] = await pool.query(
       `SELECT id, student_id, name, email, course, year_level, 
               enrollment_status, photo_url, created_at, updated_at
        FROM students 
@@ -131,10 +137,16 @@ router.get('/:id', auth, async (req, res) => {
       });
     }
 
+    const student = students[0];
+    const studentWithFullUrl = {
+      ...student,
+      photo_url: student.photo_url ? `${req.protocol}://${req.get('host')}${student.photo_url}` : null
+    };
+
     res.json({
       success: true,
       message: 'Student retrieved successfully',
-      data: students[0]
+      data: studentWithFullUrl
     });
 
   } catch (error) {
@@ -159,7 +171,7 @@ router.post('/', adminAuth, upload.single('photo'), async (req, res) => {
     }
 
     // Check if student ID or email already exists
-    const [existing] = await pool.execute(
+    const [existing] = await pool.query(
       'SELECT id FROM students WHERE (student_id = ? OR email = ?) AND active = true',
       [student_id, email]
     );
@@ -173,7 +185,7 @@ router.post('/', adminAuth, upload.single('photo'), async (req, res) => {
 
     const photo_url = req.file ? `/uploads/photos/${req.file.filename}` : null;
 
-    const [result] = await pool.execute(
+    const [result] = await pool.query(
       `INSERT INTO students (student_id, name, email, course, year_level, 
        enrollment_status, photo_url, created_at, updated_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -183,17 +195,22 @@ router.post('/', adminAuth, upload.single('photo'), async (req, res) => {
     const newStudentId = result.insertId;
 
     // Get the created student
-    const [newStudent] = await pool.execute(
+    const [newStudent] = await pool.query(
       `SELECT id, student_id, name, email, course, year_level, 
               enrollment_status, photo_url, created_at, updated_at
        FROM students WHERE id = ?`,
       [newStudentId]
     );
 
+    const studentWithFullUrl = {
+      ...newStudent[0],
+      photo_url: newStudent[0].photo_url ? `${req.protocol}://${req.get('host')}${newStudent[0].photo_url}` : null
+    };
+
     res.status(201).json({
       success: true,
       message: 'Student created successfully',
-      data: newStudent[0]
+      data: studentWithFullUrl
     });
 
   } catch (error) {
@@ -212,7 +229,7 @@ router.put('/:id', adminAuth, upload.single('photo'), async (req, res) => {
     const { student_id, name, email, course, year_level, enrollment_status } = req.body;
 
     // Check if student exists
-    const [existing] = await pool.execute(
+    const [existing] = await pool.query(
       'SELECT * FROM students WHERE id = ? AND active = true',
       [id]
     );
@@ -225,7 +242,7 @@ router.put('/:id', adminAuth, upload.single('photo'), async (req, res) => {
     }
 
     // Check for duplicate student_id or email (excluding current student)
-    const [duplicates] = await pool.execute(
+    const [duplicates] = await pool.query(
       'SELECT id FROM students WHERE (student_id = ? OR email = ?) AND id != ? AND active = true',
       [student_id, email, id]
     );
@@ -249,7 +266,7 @@ router.put('/:id', adminAuth, upload.single('photo'), async (req, res) => {
       photo_url = `/uploads/photos/${req.file.filename}`;
     }
 
-    await pool.execute(
+    await pool.query(
       `UPDATE students 
        SET student_id = ?, name = ?, email = ?, course = ?, 
            year_level = ?, enrollment_status = ?, photo_url = ?, updated_at = NOW()
@@ -258,17 +275,22 @@ router.put('/:id', adminAuth, upload.single('photo'), async (req, res) => {
     );
 
     // Get updated student
-    const [updatedStudent] = await pool.execute(
+    const [updatedStudent] = await pool.query(
       `SELECT id, student_id, name, email, course, year_level, 
               enrollment_status, photo_url, created_at, updated_at
        FROM students WHERE id = ?`,
       [id]
     );
 
+    const studentWithFullUrl = {
+      ...updatedStudent[0],
+      photo_url: updatedStudent[0].photo_url ? `${req.protocol}://${req.get('host')}${updatedStudent[0].photo_url}` : null
+    };
+
     res.json({
       success: true,
       message: 'Student updated successfully',
-      data: updatedStudent[0]
+      data: studentWithFullUrl
     });
 
   } catch (error) {
@@ -285,7 +307,7 @@ router.delete('/:id', adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [existing] = await pool.execute(
+    const [existing] = await pool.query(
       'SELECT * FROM students WHERE id = ? AND active = true',
       [id]
     );
@@ -297,7 +319,7 @@ router.delete('/:id', adminAuth, async (req, res) => {
       });
     }
 
-    await pool.execute(
+    await pool.query(
       'UPDATE students SET active = false, updated_at = NOW() WHERE id = ?',
       [id]
     );
@@ -321,7 +343,7 @@ router.get('/:id/qr', auth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [students] = await pool.execute(
+    const [students] = await pool.query(
       'SELECT * FROM students WHERE id = ? AND active = true',
       [id]
     );

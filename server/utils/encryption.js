@@ -1,13 +1,15 @@
 const crypto = require('crypto');
 
 // Encryption utility for QR codes
-const algorithm = 'aes-256-gcm';
-const secretKey = process.env.ENCRYPTION_KEY || crypto.randomBytes(32);
+const algorithm = 'aes-256-cbc';
+const secretKey = process.env.ENCRYPTION_KEY ? 
+  crypto.createHash('sha256').update(process.env.ENCRYPTION_KEY).digest() : 
+  crypto.randomBytes(32);
 
 const encrypt = (text) => {
   try {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher('aes256', secretKey);
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secretKey), iv);
     
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -25,7 +27,7 @@ const decrypt = (encryptedText) => {
     const iv = Buffer.from(textParts.shift(), 'hex');
     const encrypted = textParts.join(':');
     
-    const decipher = crypto.createDecipher('aes256', secretKey);
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey), iv);
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     
