@@ -8,10 +8,7 @@ export default defineConfig({
   server: {
     host: true, // Allow external connections
     port: 5173,
-    https: {
-      key: fs.readFileSync('./192.168.1.16+2-key.pem'),
-      cert: fs.readFileSync('./192.168.1.16+2.pem'),
-    },
+    https: false,
     proxy: {
       '/api': {
         target: 'http://192.168.1.16:3001',
