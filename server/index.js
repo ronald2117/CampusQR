@@ -18,9 +18,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Security middleware
-app.use(helmet({
-  crossOriginResourcePolicy: false,
-}));
+app.use(helmet());
 
 // Rate limiting
 const limiter = rateLimit({
