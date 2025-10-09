@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import './Login.css'
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -33,33 +34,25 @@ const Login = () => {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f8fafc',
-      padding: '1rem'
-    }}>
-      <div className="card" style={{ maxWidth: '400px', width: '100%' }}>
-        <div className="card-body">
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <div style={{
-              width: '80px',
-              height: '80px',
-              backgroundColor: '#2563eb',
-              borderRadius: '50%',
-              margin: '0 auto 1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2rem',
-              color: 'white'
-            }}>
-              📱
+    <div className="login-container">
+      <div className="login-card">
+        <div className="login-card-body">
+          <div className="login-header">
+            <div className="qr-logo">
+              <div className="qr-icon">
+                <div className="qr-pixel"></div>
+                <div className="qr-pixel"></div>
+                <div className="qr-pixel"></div>
+                <div className="qr-pixel"></div>
+                <div className="qr-pixel"></div>
+                <div className="qr-pixel"></div>
+                <div className="qr-pixel"></div>
+                <div className="qr-pixel"></div>
+                <div className="qr-pixel"></div>
+              </div>
             </div>
-            <h1 style={{ marginBottom: '0.5rem', color: '#1e293b' }}>CampusQR</h1>
-            <p style={{ color: '#64748b', margin: 0 }}>
+            <h1 className="login-title">CampusQR</h1>
+            <p className="login-subtitle">
               Student Verification System
             </p>
           </div>
@@ -71,12 +64,13 @@ const Login = () => {
           )}
 
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="email">Email</label>
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">Email</label>
               <input
                 type="email"
                 id="email"
                 name="email"
+                className="form-input"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter your email"
@@ -85,12 +79,13 @@ const Login = () => {
               />
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="password">Password</label>
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">Password</label>
               <input
                 type="password"
                 id="password"
                 name="password"
+                className="form-input"
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Enter your password"
@@ -101,12 +96,12 @@ const Login = () => {
 
             <button
               type="submit"
-              className="btn btn-primary btn-full"
+              className="login-button"
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <div className="spinner" style={{ width: '16px', height: '16px' }}></div>
+                  <div className="spinner"></div>
                   Signing in...
                 </>
               ) : (
@@ -115,22 +110,18 @@ const Login = () => {
             </button>
           </form>
 
-          <div style={{
-            marginTop: '2rem',
-            padding: '1rem',
-            backgroundColor: '#f1f5f9',
-            borderRadius: '8px',
-            fontSize: '0.875rem'
-          }}>
-            <p style={{ fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
+          <div className="demo-credentials-container">
+            <p className="demo-title">
               Demo Credentials:
             </p>
-            <p style={{ margin: '0.25rem 0', color: '#6b7280' }}>
-              <strong>Admin:</strong> admin@campusqr.com / admin123
-            </p>
-            <p style={{ margin: '0.25rem 0', color: '#6b7280' }}>
-              <strong>Security:</strong> security@campusqr.com / security123
-            </p>
+            <div className="demo-item">
+              <span className="demo-role">Admin:</span>
+              <span className="demo-credentials">admin@campusqr.com / admin123</span>
+            </div>
+            <div className="demo-item">
+              <span className="demo-role">Security:</span>
+              <span className="demo-credentials">security@campusqr.com / security123</span>
+            </div>
           </div>
         </div>
       </div>
