@@ -1,11 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import logo from '../../public/qr-logo.svg'
+import './Layout.css'
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   const { user, logout } = useAuth()
   const location = useLocation()
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768)
+      if (window.innerWidth > 768) {
+        setSidebarOpen(false)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const navigation = [
     {
@@ -23,7 +38,7 @@ const Layout = ({ children }) => {
     {
       name: 'Scanner',
       path: '/scanner',
-      icon: '📱',
+      icon: '📷',
       roles: ['admin', 'security']
     },
     {
@@ -43,87 +58,36 @@ const Layout = ({ children }) => {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f8fafc' }}>
+    <div className="layout-container">
       {/* Sidebar */}
-      <div style={{
-        width: sidebarOpen ? '250px' : '250px',
-        backgroundColor: '#1e293b',
-        color: 'white',
-        transition: 'all 0.3s',
-        position: 'relative',
-        ...(window.innerWidth <= 768 && {
-          position: 'fixed',
-          left: sidebarOpen ? '0' : '-250px',
-          zIndex: 1000,
-          height: '100vh'
-        })
-      }}>
+      <div className={`sidebar ${isMobile ? 'sidebar-mobile' : ''} ${sidebarOpen ? 'open' : ''}`}>
         {/* Logo */}
-        <div style={{
-          padding: '1.5rem',
-          borderBottom: '1px solid #334155',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem'
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            backgroundColor: '#2563eb',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.25rem'
-          }}>
-            📱
+        <div className="logo-section">
+          <div className="logo-icon">
+            <img src={logo} alt="CampusQR Logo" />
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: "white" }}>
+            <h2 className="logo-text">
               CampusQR
             </h2>
-            <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
+            <p className="logo-version">
               v1.0.0
             </p>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav style={{ padding: '1rem 0' }}>
+        <nav className="navigation">
           {filteredNavigation.map((item) => {
             const isActive = location.pathname === item.path
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.75rem 1.5rem',
-                  color: isActive ? '#2563eb' : '#cbd5e1',
-                  backgroundColor: isActive ? '#1e40af20' : 'transparent',
-                  borderRight: isActive ? '3px solid #2563eb' : '3px solid transparent',
-                  textDecoration: 'none',
-                  transition: 'all 0.2s',
-                  fontSize: '0.875rem',
-                  fontWeight: isActive ? '600' : '400'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.target.style.backgroundColor = '#334155'
-                    e.target.style.color = 'white'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.target.style.backgroundColor = 'transparent'
-                    e.target.style.color = '#cbd5e1'
-                  }
-                }}
+                className={`nav-link ${isActive ? 'active' : ''}`}
                 onClick={() => setSidebarOpen(false)}
               >
-                <span style={{ fontSize: '1.25rem' }}>{item.icon}</span>
+                <span className="nav-icon">{item.icon}</span>
                 {item.name}
               </Link>
             )
@@ -131,51 +95,23 @@ const Layout = ({ children }) => {
         </nav>
 
         {/* User Info */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: '1rem',
-          borderTop: '1px solid #334155',
-          backgroundColor: '#0f172a'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            marginBottom: '0.75rem'
-          }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              backgroundColor: '#2563eb',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.875rem',
-              fontWeight: '600'
-            }}>
+        <div className="user-section">
+          <div className="user-info">
+            <div className="user-avatar">
               {user?.username?.[0]?.toUpperCase()}
             </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: '500' }}>
+            <div className="user-details">
+              <p className="user-name">
                 {user?.username}
               </p>
-              <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
+              <p className="user-role">
                 {user?.role}
               </p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="btn btn-outline btn-sm"
-            style={{
-              width: '100%',
-              borderColor: '#475569',
-              color: '#cbd5e1'
-            }}
+            className="logout-button"
           >
             Sign Out
           </button>
@@ -183,72 +119,34 @@ const Layout = ({ children }) => {
       </div>
 
       {/* Mobile sidebar overlay */}
-      {sidebarOpen && window.innerWidth <= 768 && (
+      {sidebarOpen && isMobile && (
         <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 999
-          }}
+          className="mobile-overlay"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="main-content">
         {/* Header */}
-        <header style={{
-          backgroundColor: 'white',
-          borderBottom: '1px solid #e2e8f0',
-          padding: '1rem 1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <header className="header">
+          <div className="header-left">
             {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              style={{
-                display: window.innerWidth <= 768 ? 'flex' : 'none',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '40px',
-                height: '40px',
-                border: 'none',
-                backgroundColor: 'transparent',
-                cursor: 'pointer',
-                fontSize: '1.5rem',
-                color: '#374151'
-              }}
+              className="mobile-menu-button"
+              style={{ display: isMobile ? 'flex' : 'none' }}
             >
               ☰
             </button>
 
-            <h1 style={{
-              margin: 0,
-              fontSize: '1.5rem',
-              fontWeight: '600',
-              color: '#1e293b'
-            }}>
+            <h1 className="page-title">
               {navigation.find(item => item.path === location.pathname)?.name || 'CampusQR'}
             </h1>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#f1f5f9',
-              borderRadius: '20px',
-              fontSize: '0.875rem',
-              color: '#374151',
-              fontWeight: '500'
-            }}>
+          <div className="header-right">
+            <span className="date-badge">
               {new Date().toLocaleDateString('en-US', {
                 weekday: 'short',
                 year: 'numeric',
@@ -260,11 +158,7 @@ const Layout = ({ children }) => {
         </header>
 
         {/* Page content */}
-        <main style={{
-          flex: 1,
-          overflow: 'auto',
-          padding: '1.5rem'
-        }}>
+        <main className="page-content">
           {children}
         </main>
       </div>
