@@ -18,7 +18,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -39,6 +41,10 @@ app.use(cors({
     'https://127.0.0.1:5173',
     'http://127.0.0.1:5174',
     'https://127.0.0.1:5174',
+    'http://10.86.120.206:5173',
+    'https://10.86.120.206:5173',
+    'http://10.86.120.206:5174',
+    'https://10.86.120.206:5174',
     /^https?:\/\/192\.168\.\d+\.\d+:(5173|5174)$/,
     /^https?:\/\/10\.\d+\.\d+\.\d+:(5173|5174)$/,
     /^https?:\/\/172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+:(5173|5174)$/
