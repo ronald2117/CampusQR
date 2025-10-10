@@ -1,3 +1,5 @@
+import './QRCodeModal.css'
+
 const QRCodeModal = ({ qrData, onClose }) => {
   const handlePrint = () => {
     const printWindow = window.open('', '_blank')
@@ -71,86 +73,66 @@ const QRCodeModal = ({ qrData, onClose }) => {
     document.body.removeChild(link)
   }
 
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
+  }
+
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: '500px' }}>
-        <div className="card-header">
-          <h3 className="card-title">QR Code Generated</h3>
+    <div className="qr-modal-overlay" onClick={handleOverlayClick}>
+      <div className="qr-modal">
+        <div className="qr-modal-header">
+          <h3 className="qr-modal-title">QR Code Generated</h3>
           <button
             onClick={onClose}
-            style={{
-              position: 'absolute',
-              top: '1rem',
-              right: '1rem',
-              background: 'none',
-              border: 'none',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              color: 'var(--text-muted)'
-            }}
+            className="qr-modal-close"
           >
-            ×
+            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
-        <div className="card-body" style={{ textAlign: 'center' }}>
+        <div className="qr-modal-body">
           {/* Student Info */}
-          <div style={{
-            backgroundColor: '#f8fafc',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1.5rem'
-          }}>
-            <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-color)' }}>
+          <div className="student-info-card">
+            <h4 className="student-name">
               {qrData.student.name}
             </h4>
-            <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)' }}>
+            <p className="student-detail">
               <strong>Student ID:</strong> {qrData.student.student_id}
             </p>
-            <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)' }}>
+            <p className="student-detail">
               <strong>Course:</strong> {qrData.student.course}
             </p>
           </div>
 
           {/* QR Code */}
-          <div style={{
-            padding: '1.5rem',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            border: '2px dashed var(--border-color)',
-            marginBottom: '1.5rem',
-            display: 'inline-block'
-          }}>
+          <div className="qr-code-container">
             <img
               src={qrData.qrCode}
               alt="Student QR Code"
-              style={{
-                width: '256px',
-                height: '256px',
-                display: 'block'
-              }}
+              className="qr-code-image"
             />
           </div>
 
           {/* Instructions */}
-          <div style={{
-            backgroundColor: '#eff6ff',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1.5rem',
-            textAlign: 'left'
-          }}>
-            <h5 style={{ margin: '0 0 0.75rem', color: '#1e40af' }}>
-              📱 How to use this QR Code:
+          <div className="instructions-card">
+            <h5 className="instructions-title">
+              <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              How to use this QR Code:
             </h5>
-            <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#374151' }}>
-              <li style={{ marginBottom: '0.5rem' }}>
+            <ul className="instructions-list">
+              <li>
                 Security personnel can scan this code using the CampusQR scanner
               </li>
-              <li style={{ marginBottom: '0.5rem' }}>
+              <li>
                 The system will verify the student's enrollment status in real-time
               </li>
-              <li style={{ marginBottom: '0.5rem' }}>
+              <li>
                 Each scan is logged for security and audit purposes
               </li>
               <li>
@@ -160,39 +142,43 @@ const QRCodeModal = ({ qrData, onClose }) => {
           </div>
 
           {/* Security Notice */}
-          <div style={{
-            backgroundColor: '#fef3c7',
-            padding: '0.75rem',
-            borderRadius: '6px',
-            fontSize: '0.875rem',
-            color: '#92400e',
-            marginBottom: '1.5rem'
-          }}>
-            ⚠️ <strong>Security Notice:</strong> This QR code contains encrypted student data. 
-            Do not share or distribute unauthorized copies.
+          <div className="security-notice">
+            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{minWidth: '16px'}}>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <span>
+              <strong>Security Notice:</strong> This QR code contains encrypted student data. 
+              Do not share or distribute unauthorized copies.
+            </span>
           </div>
         </div>
 
-        <div className="card-footer">
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+        <div className="qr-modal-footer">
+          <div className="action-buttons">
             <button
               onClick={handleDownload}
-              className="btn btn-outline"
+              className="download-btn"
             >
-              💾 Download PNG
+              <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download PNG
             </button>
             <button
               onClick={handlePrint}
-              className="btn btn-primary"
+              className="print-btn"
             >
-              🖨️ Print QR Code
+              <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              Print QR Code
             </button>
           </div>
           
-          <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+          <div className="close-container">
             <button
               onClick={onClose}
-              className="btn btn-secondary btn-sm"
+              className="close-btn"
             >
               Close
             </button>
