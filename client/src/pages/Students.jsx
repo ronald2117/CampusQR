@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 import StudentModal from '../components/StudentModal'
 import QRCodeModal from '../components/QRCodeModal'
+import './Students.css'
 
 const Students = () => {
   const [students, setStudents] = useState([])
@@ -99,73 +100,61 @@ const Students = () => {
     }
   }
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      active: 'badge-success',
-      inactive: 'badge-warning',
-      graduated: 'badge-info',
-      suspended: 'badge-danger'
-    }
-    return badges[status] || 'badge-secondary'
-  }
-
   if (loading && students.length === 0) {
     return <LoadingSpinner message="Loading students..." />
   }
 
   return (
-    <div className="container-fluid">
+    <div className="students-container">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '2rem'
-      }}>
-        <div>
-          <h2 style={{ margin: 0 }}>Students Management</h2>
-          <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-            Manage student records and generate QR codes
-          </p>
+      <div className="students-header">
+        <div className="students-header-content">
+          <h2>Students Management</h2>
+          <p>Manage student records and generate QR codes</p>
         </div>
         {isAdmin && (
-          <button onClick={handleAdd} className="btn btn-primary">
-            ➕ Add Student
+          <button onClick={handleAdd} className="add-student-btn">
+            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Student
           </button>
         )}
       </div>
 
       {/* Search and Filters */}
-      <div className="card mb-6">
-        <div className="card-body">
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ flex: 1 }}>
+      <div className="search-card">
+        <div className="search-card-body">
+          <div className="search-controls">
+            <div className="search-input-container">
               <input
                 type="text"
+                className="search-input"
                 placeholder="Search students by name, ID, email, or course..."
                 value={searchTerm}
                 onChange={handleSearch}
-                style={{ margin: 0 }}
               />
             </div>
             <button 
               onClick={fetchStudents} 
-              className="btn btn-outline"
+              className="refresh-btn"
               disabled={loading}
             >
-              🔄 Refresh
+              <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
             </button>
           </div>
         </div>
       </div>
 
       {error && (
-        <div className="alert alert-error mb-6">
+        <div className="error-alert">
           {error}
           <button 
             onClick={fetchStudents}
-            className="btn btn-outline btn-sm"
-            style={{ marginLeft: '1rem' }}
+            className="retry-btn"
           >
             Retry
           </button>
@@ -173,160 +162,143 @@ const Students = () => {
       )}
 
       {/* Students Table */}
-      <div className="card">
-        <div className="card-body" style={{ padding: 0 }}>
-          {students.length > 0 ? (
-            <>
-              <div style={{ overflowX: 'auto' }}>
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Photo</th>
-                      <th>Student ID</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Course</th>
-                      <th>Year</th>
-                      <th>Status</th>
-                      <th>Actions</th>
+      <div className="students-table-card">
+        {students.length > 0 ? (
+          <>
+            <div className="table-container">
+              <table className="students-table">
+                <thead>
+                  <tr>
+                    <th>Avatar</th>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Course</th>
+                    <th>Year</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((student) => (
+                    <tr key={student.id}>
+                      <td>
+                        <div className="student-avatar">
+                          {student.name.charAt(0).toUpperCase()}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="student-id">{student.student_id}</span>
+                      </td>
+                      <td>
+                        <div>
+                          <div className="student-name">{student.name}</div>
+                          <div className="student-created">
+                            Added {new Date(student.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="student-course">{student.email}</td>
+                      <td className="student-course">{student.course}</td>
+                      <td className="student-year">Year {student.year_level}</td>
+                      <td>
+                        <span className={`status-badge ${student.enrollment_status}`}>
+                          {student.enrollment_status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            onClick={() => handleGenerateQR(student)}
+                            className="action-btn qr-btn"
+                            title="Generate QR Code"
+                          >
+                            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                            </svg>
+                          </button>
+                          {isAdmin && (
+                            <>
+                              <button
+                                onClick={() => handleEdit(student)}
+                                className="action-btn edit-btn"
+                                title="Edit Student"
+                              >
+                                <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => handleDelete(student)}
+                                className="action-btn delete-btn"
+                                title="Delete Student"
+                              >
+                                <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {students.map((student) => (
-                      <tr key={student.id}>
-                        <td>
-                          <div style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            backgroundColor: '#f1f5f9',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            overflow: 'hidden'
-                          }}>
-                            {student.photo_url ? (
-                              <img
-                                src={student.photo_url}
-                                alt={student.name}
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'cover'
-                                }}
-                              />
-                            ) : (
-                              <span style={{ fontSize: '1.25rem' }}>👤</span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <span style={{ fontWeight: '600' }}>{student.student_id}</span>
-                        </td>
-                        <td>
-                          <div>
-                            <div style={{ fontWeight: '500' }}>{student.name}</div>
-                            <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                              Added {new Date(student.created_at).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </td>
-                        <td>{student.email}</td>
-                        <td>{student.course}</td>
-                        <td>Year {student.year_level}</td>
-                        <td>
-                          <span className={`badge ${getStatusBadge(student.enrollment_status)}`}>
-                            {student.enrollment_status}
-                          </span>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button
-                              onClick={() => handleGenerateQR(student)}
-                              className="btn btn-outline btn-sm"
-                              title="Generate QR Code"
-                            >
-                              📱
-                            </button>
-                            {isAdmin && (
-                              <>
-                                <button
-                                  onClick={() => handleEdit(student)}
-                                  className="btn btn-outline btn-sm"
-                                  title="Edit Student"
-                                >
-                                  ✏️
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(student)}
-                                  className="btn btn-danger btn-sm"
-                                  title="Delete Student"
-                                >
-                                  🗑️
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {pagination.totalPages > 1 && (
-                <div style={{
-                  padding: '1rem 1.5rem',
-                  borderTop: '1px solid var(--border-color)',
-                  display: 'flex',
-                  justifyContent: 'between',
-                  alignItems: 'center'
-                }}>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    Showing page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalStudents} total)
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      onClick={() => setCurrentPage(currentPage - 1)}
-                      disabled={!pagination.hasPrevPage}
-                      className="btn btn-outline btn-sm"
-                    >
-                      ← Previous
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage(currentPage + 1)}
-                      disabled={!pagination.hasNextPage}
-                      className="btn btn-outline btn-sm"
-                    >
-                      Next →
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <div style={{
-              padding: '3rem',
-              textAlign: 'center',
-              color: 'var(--text-muted)'
-            }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👥</div>
-              <h3>No Students Found</h3>
-              <p>
-                {searchTerm 
-                  ? 'No students match your search criteria.' 
-                  : 'Get started by adding your first student.'
-                }
-              </p>
-              {isAdmin && !searchTerm && (
-                <button onClick={handleAdd} className="btn btn-primary">
-                  Add First Student
-                </button>
-              )}
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="pagination-container">
+                <div className="pagination-info">
+                  Showing page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalStudents} total)
+                </div>
+                <div className="pagination-controls">
+                  <button
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={!pagination.hasPrevPage}
+                    className="pagination-btn"
+                  >
+                    <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={!pagination.hasNextPage}
+                    className="pagination-btn"
+                  >
+                    Next
+                    <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{width: '2rem', height: '2rem'}}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h3>No Students Found</h3>
+            <p>
+              {searchTerm 
+                ? 'No students match your search criteria.' 
+                : 'Get started by adding your first student.'
+              }
+            </p>
+            {isAdmin && !searchTerm && (
+              <button onClick={handleAdd} className="empty-state-btn">
+                Add First Student
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Modals */}
