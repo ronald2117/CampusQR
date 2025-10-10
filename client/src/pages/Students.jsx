@@ -169,7 +169,6 @@ const Students = () => {
               <table className="students-table">
                 <thead>
                   <tr>
-                    <th>Avatar</th>
                     <th>Student ID</th>
                     <th>Name</th>
                     <th>Email</th>
@@ -182,11 +181,6 @@ const Students = () => {
                 <tbody>
                   {students.map((student) => (
                     <tr key={student.id}>
-                      <td>
-                        <div className="student-avatar">
-                          {student.name.charAt(0).toUpperCase()}
-                        </div>
-                      </td>
                       <td>
                         <span className="student-id">{student.student_id}</span>
                       </td>
