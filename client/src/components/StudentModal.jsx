@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import './StudentModal.css'
 
 const StudentModal = ({ student, onSubmit, onClose }) => {
   const [formData, setFormData] = useState({
@@ -66,64 +67,50 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
     }
   }
 
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
+  }
+
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: '600px' }}>
-        <div className="card-header">
-          <h3 className="card-title">
+    <div className="student-modal-overlay" onClick={handleOverlayClick}>
+      <div className="student-modal">
+        <div className="student-modal-header">
+          <h3 className="student-modal-title">
             {student ? 'Edit Student' : 'Add New Student'}
           </h3>
           <button
             onClick={onClose}
-            style={{
-              position: 'absolute',
-              top: '1rem',
-              right: '1rem',
-              background: 'none',
-              border: 'none',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              color: 'var(--text-muted)'
-            }}
+            className="student-modal-close"
           >
             ×
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="card-body">
+        <form onSubmit={handleSubmit} className="student-form">
+                    <div className="student-modal-body">
             {error && (
-              <div className="alert alert-error mb-4">
+              <div className="alert alert-error">
+                <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
                 {error}
               </div>
             )}
 
             {/* Photo Upload */}
-            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-              <div style={{
-                width: '120px',
-                height: '120px',
-                borderRadius: '50%',
-                backgroundColor: '#f1f5f9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 1rem',
-                overflow: 'hidden',
-                border: '3px dashed var(--border-color)'
-              }}>
+            <div className="photo-upload-section">
+              <div className="photo-preview">
                 {previewUrl ? (
                   <img
                     src={previewUrl}
                     alt="Preview"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
                   />
                 ) : (
-                  <span style={{ fontSize: '3rem', color: 'var(--text-muted)' }}>👤</span>
+                  <svg className="photo-placeholder" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
                 )}
               </div>
               
@@ -134,18 +121,22 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
                 id="photo"
                 style={{ display: 'none' }}
               />
-              <label htmlFor="photo" className="btn btn-outline btn-sm">
-                📷 Upload Photo
+              <label htmlFor="photo" className="upload-btn">
+                <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Upload Photo
               </label>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0.5rem 0 0' }}>
+              <p className="upload-help-text">
                 Optional. Max 5MB. JPG, PNG, or GIF.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="form-grid">
               {/* Student ID */}
-              <div>
-                <label htmlFor="student_id">Student ID *</label>
+              <div className="form-group">
+                <label htmlFor="student_id" className="form-label">Student ID *</label>
                 <input
                   type="text"
                   id="student_id"
@@ -155,12 +146,13 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
                   placeholder="e.g., STU001"
                   required
                   disabled={loading}
+                  className="form-input"
                 />
               </div>
 
               {/* Name */}
-              <div>
-                <label htmlFor="name">Full Name *</label>
+              <div className="form-group">
+                <label htmlFor="name" className="form-label">Full Name *</label>
                 <input
                   type="text"
                   id="name"
@@ -170,13 +162,14 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
                   placeholder="e.g., John Doe"
                   required
                   disabled={loading}
+                  className="form-input"
                 />
               </div>
             </div>
 
             {/* Email */}
-            <div style={{ marginTop: '1rem' }}>
-              <label htmlFor="email">Email Address *</label>
+            <div className="form-group form-group-full">
+              <label htmlFor="email" className="form-label">Email Address *</label>
               <input
                 type="email"
                 id="email"
@@ -186,13 +179,14 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
                 placeholder="e.g., john.doe@university.edu"
                 required
                 disabled={loading}
+                className="form-input"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4" style={{ marginTop: '1rem' }}>
+            <div className="form-grid">
               {/* Course */}
-              <div>
-                <label htmlFor="course">Course/Program *</label>
+              <div className="form-group">
+                <label htmlFor="course" className="form-label">Course/Program *</label>
                 <select
                   id="course"
                   name="course"
@@ -200,6 +194,7 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
                   onChange={handleInputChange}
                   required
                   disabled={loading}
+                  className="form-select"
                 >
                   <option value="">Select Course</option>
                   <option value="Computer Science">Computer Science</option>
@@ -216,14 +211,15 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
               </div>
 
               {/* Year Level */}
-              <div>
-                <label htmlFor="year_level">Year Level</label>
+              <div className="form-group">
+                <label htmlFor="year_level" className="form-label">Year Level</label>
                 <select
                   id="year_level"
                   name="year_level"
                   value={formData.year_level}
                   onChange={handleInputChange}
                   disabled={loading}
+                  className="form-select"
                 >
                   <option value={1}>1st Year</option>
                   <option value={2}>2nd Year</option>
@@ -235,14 +231,15 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
             </div>
 
             {/* Enrollment Status */}
-            <div style={{ marginTop: '1rem' }}>
-              <label htmlFor="enrollment_status">Enrollment Status</label>
+            <div className="form-group form-group-full">
+              <label htmlFor="enrollment_status" className="form-label">Enrollment Status</label>
               <select
                 id="enrollment_status"
                 name="enrollment_status"
                 value={formData.enrollment_status}
                 onChange={handleInputChange}
                 disabled={loading}
+                className="form-select"
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
@@ -252,8 +249,8 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
             </div>
           </div>
 
-          <div className="card-footer">
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+          <div className="student-modal-footer">
+            <div className="button-group">
               <button
                 type="button"
                 onClick={onClose}
@@ -269,11 +266,16 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
               >
                 {loading ? (
                   <>
-                    <div className="spinner" style={{ width: '16px', height: '16px' }}></div>
+                    <div className="spinner"></div>
                     {student ? 'Updating...' : 'Creating...'}
                   </>
                 ) : (
-                  student ? 'Update Student' : 'Create Student'
+                  <>
+                    <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {student ? 'Update Student' : 'Create Student'}
+                  </>
                 )}
               </button>
             </div>
