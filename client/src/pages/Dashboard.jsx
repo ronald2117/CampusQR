@@ -202,24 +202,92 @@ const Dashboard = () => {
           </div>
           <div className="content-card-body">
             {stats?.topCourses?.length > 0 ? (
-              stats.topCourses.map((course, index) => {
-                const maxCount = Math.max(...stats.topCourses.map(c => c.student_count))
-                const percentage = (course.student_count / maxCount) * 100
+              <div className="courses-chart-container">
+                <div className="pie-chart-wrapper">
+                  <svg className="pie-chart" viewBox="0 0 100 100">
+                    {(() => {
+                      const total = stats.topCourses.reduce((sum, course) => sum + course.student_count, 0)
+                      const colors = [
+                        '#3b82f6', // blue
+                        '#10b981', // green
+                        '#f59e0b', // amber
+                        '#ef4444', // red
+                        '#8b5cf6', // purple
+                        '#ec4899', // pink
+                        '#06b6d4', // cyan
+                        '#84cc16', // lime
+                      ]
+                      
+                      let currentAngle = 0
+                      
+                      return stats.topCourses.map((course, index) => {
+                        const percentage = (course.student_count / total) * 100
+                        const angle = (percentage / 100) * 360
+                        const startAngle = currentAngle
+                        currentAngle += angle
+                        
+                        // Calculate path for pie slice
+                        const startX = 50 + 50 * Math.cos((Math.PI * startAngle) / 180)
+                        const startY = 50 + 50 * Math.sin((Math.PI * startAngle) / 180)
+                        const endX = 50 + 50 * Math.cos((Math.PI * (startAngle + angle)) / 180)
+                        const endY = 50 + 50 * Math.sin((Math.PI * (startAngle + angle)) / 180)
+                        const largeArc = angle > 180 ? 1 : 0
+                        
+                        const pathData = [
+                          `M 50 50`,
+                          `L ${startX} ${startY}`,
+                          `A 50 50 0 ${largeArc} 1 ${endX} ${endY}`,
+                          `Z`
+                        ].join(' ')
+                        
+                        return (
+                          <path
+                            key={index}
+                            d={pathData}
+                            fill={colors[index % colors.length]}
+                            stroke="white"
+                            strokeWidth="0.5"
+                          />
+                        )
+                      })
+                    })()}
+                  </svg>
+                </div>
                 
-                return (
-                  <div key={index} className="course-item">
-                    <div className="course-header">
-                      <span className="course-name">{course.course}</span>
-                      <span className="course-count">
-                        {course.student_count} students
-                      </span>
-                    </div>
-                    <div className="course-progress-bar">
-                      <div className="course-progress" style={{ width: `${percentage}%` }} />
-                    </div>
-                  </div>
-                )
-              })
+                <div className="course-legends">
+                  {(() => {
+                    const total = stats.topCourses.reduce((sum, course) => sum + course.student_count, 0)
+                    const colors = [
+                      '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
+                      '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
+                    ]
+                    
+                    return stats.topCourses.map((course, index) => {
+                      const percentage = ((course.student_count / total) * 100).toFixed(1)
+                      
+                      return (
+                        <div key={index} className="course-legend-item">
+                          <div 
+                            className="course-legend-color" 
+                            style={{ backgroundColor: colors[index % colors.length] }}
+                          />
+                          <div className="course-legend-info">
+                            <div>
+                              <div className="course-legend-name">{course.course}</div>
+                              <div className="course-legend-count">
+                                {course.student_count} students
+                              </div>
+                            </div>
+                            <div className="course-legend-percentage">
+                              {percentage}%
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })
+                  })()}
+                </div>
+              </div>
             ) : (
               <p className="empty-message">No course data available</p>
             )}
