@@ -7,7 +7,7 @@
 /* Overview Cards Grid */
 .overview-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -23,11 +23,6 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.15);
 }
 
 .stat-card::before {
@@ -57,13 +52,6 @@
   border: 2px solid rgba(59, 130, 246, 0.1);
   color: #3b82f6;
   transition: all 0.3s ease;
-}
-
-.stat-card:hover .stat-icon {
-  transform: scale(1.1);
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  border-color: transparent;
 }
 
 .stat-info h3 {
