@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
-import { scannerService } from '../services/api'
-import QrScanner from 'qr-scanner'
+import { useState, useEffect, useRef } from 'react';
+import api from '../services/api';
+import QrScanner from 'qr-scanner';
+import './Scanner.css';
 
 const Scanner = () => {
   const videoRef = useRef(null)
@@ -267,88 +268,69 @@ const Scanner = () => {
   }
 
   return (
-    <div className="container-fluid">
+    <div className="scanner-container">
       {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ margin: 0 }}>QR Code Scanner</h2>
-        <p style={{ margin: 0, color: 'var(--text-muted)' }}>
+      <div className="scanner-header">
+        <h2>
+          QR Code Scanner
+        </h2>
+        <p>
           Scan student QR codes or perform manual verification
         </p>
-        {/* Debug info for mobile */}
-        <details style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-          <summary style={{ cursor: 'pointer' }}>📱 Debug Info</summary>
-          <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
-            <p>User Agent: {navigator.userAgent}</p>
-            <p>Cameras detected: {cameras.length}</p>
-            <p>Selected camera: {selectedCamera || 'None'}</p>
-            <p>HTTPS: {window.location.protocol === 'https:' ? 'Yes' : 'No (required for camera)'}</p>
-            {cameras.length > 0 && (
-              <details style={{ marginTop: '0.5rem' }}>
-                <summary style={{ cursor: 'pointer', fontSize: '0.8rem' }}>Camera Details</summary>
-                <div style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}>
-                  {cameras.map((camera, index) => {
-                    const isBack = camera.label.toLowerCase().includes('back') || 
-                                 camera.label.toLowerCase().includes('environment') || 
-                                 camera.label.toLowerCase().includes('rear')
-                    return (
-                      <p key={camera.id} style={{ margin: '0.25rem 0' }}>
-                        {index + 1}. {camera.label || 'Unknown'} 
-                        <span style={{ color: isBack ? 'green' : 'blue' }}>
-                          {isBack ? ' (Back Camera)' : ' (Front Camera)'}
-                        </span>
-                        <br />
-                        <span style={{ color: '#666', fontSize: '0.7rem' }}>ID: {camera.id}</span>
-                      </p>
-                    )
-                  })}
-                </div>
-              </details>
-            )}
-          </div>
-        </details>
       </div>
 
       {/* Location Input */}
-      <div className="card mb-6">
-        <div className="card-body">
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'end' }}>
-            <div style={{ flex: 1 }}>
-              <label htmlFor="location">Scanning Location</label>
-              <input
-                type="text"
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g., Main Gate, Library Entrance, Dormitory"
-              />
-            </div>
-            <div>
-              <button
-                onClick={() => setManualMode(!manualMode)}
-                className={`btn ${manualMode ? 'btn-primary' : 'btn-outline'}`}
-              >
-                {manualMode ? '📱 QR Mode' : '✏️ Manual Mode'}
-              </button>
-            </div>
+      <div className="location-card">
+        <div className="location-controls">
+          <div className="location-input-group">
+            <label htmlFor="location">
+              <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Scanning Location
+            </label>
+            <input
+              type="text"
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g., Main Gate, Library Entrance, Dormitory"
+            />
           </div>
+          <button
+            onClick={() => setManualMode(!manualMode)}
+            className={`mode-toggle-btn ${manualMode ? 'active' : ''}`}
+          >
+            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {manualMode ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              )}
+            </svg>
+            {manualMode ? 'QR Mode' : 'Manual Mode'}
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <div className="scanner-grid">
         {!manualMode ? (
           /* QR Scanner Mode */
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">📱 QR Code Scanner</h3>
+          <div className="scanner-card">
+            <div className="scanner-card-header">
+              <h3 className="scanner-card-title">
+                <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+                QR Code Scanner
+              </h3>
               {cameras.length > 1 && (
-                <div style={{ marginTop: '0.5rem' }}>
-                  <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.25rem', display: 'block' }}>
-                    Camera:
-                  </label>
+                <div className="camera-selector">
+                  <label>Camera:</label>
                   <select
                     value={selectedCamera}
                     onChange={(e) => switchCamera(e.target.value)}
-                    style={{ maxWidth: '300px' }}
                   >
                     {cameras.map((camera) => {
                       const isBack = camera.label.toLowerCase().includes('back') || 
@@ -357,13 +339,13 @@ const Scanner = () => {
                       const displayName = camera.label || `Camera ${camera.id}`
                       return (
                         <option key={camera.id} value={camera.id}>
-                          {displayName} {isBack ? '📷 (Back)' : '🤳 (Front)'}
+                          {displayName} {isBack ? '(Back)' : '(Front)'}
                         </option>
                       )
                     })}
                   </select>
                   {cameras.length > 1 && (
-                    <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+                    <div className="camera-quick-switches">
                       <button
                         onClick={() => {
                           const backCam = cameras.find(cam => 
@@ -373,14 +355,18 @@ const Scanner = () => {
                           )
                           if (backCam) switchCamera(backCam.id)
                         }}
-                        className="btn btn-outline btn-sm"
+                        className="camera-quick-btn"
                         disabled={!cameras.some(cam => 
                           cam.label.toLowerCase().includes('back') || 
                           cam.label.toLowerCase().includes('environment') || 
                           cam.label.toLowerCase().includes('rear')
                         )}
                       >
-                        📷 Use Back Camera
+                        <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Use Back Camera
                       </button>
                       <button
                         onClick={() => {
@@ -393,52 +379,35 @@ const Scanner = () => {
                           )
                           if (frontCam) switchCamera(frontCam.id)
                         }}
-                        className="btn btn-outline btn-sm"
+                        className="camera-quick-btn"
                       >
-                        🤳 Use Front Camera
+                        <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Use Front Camera
                       </button>
                     </div>
                   )}
                 </div>
               )}
             </div>
-            <div className="card-body">
-              <div style={{
-                position: 'relative',
-                backgroundColor: '#000',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                aspectRatio: '4/3',
-                maxWidth: '600px',
-                margin: '0 auto'
-              }}>
+            <div className="scanner-card-body">
+              <div className="video-container">
                 <video
                   ref={videoRef}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
-                  }}
+                  className="video-element"
                   playsInline
                   muted
                 />
                 
                 {!scanning && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                    color: 'white'
-                  }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📱</div>
-                      <p style={{ margin: 0, fontSize: '1.125rem' }}>
+                  <div className="video-overlay">
+                    <div className="video-overlay-content">
+                      <svg className="video-overlay-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                      </svg>
+                      <p className="video-overlay-text">
                         Camera is ready. Click "Start Scanning" to begin.
                       </p>
                     </div>
@@ -446,87 +415,98 @@ const Scanner = () => {
                 )}
 
                 {loading && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    color: 'white'
-                  }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div className="spinner" style={{ margin: '0 auto 1rem' }} />
-                      <p style={{ margin: 0 }}>Verifying QR Code...</p>
+                  <div className="video-overlay loading-overlay">
+                    <div className="video-overlay-content">
+                      <div className="spinner" />
+                      <p className="video-overlay-text">Verifying QR Code...</p>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div style={{
-                display: 'flex',
-                gap: '1rem',
-                justifyContent: 'center',
-                marginTop: '1.5rem'
-              }}>
+              <div className="scanner-controls">
                 {!scanning ? (
                   <button
                     onClick={startScanning}
-                    className="btn btn-primary btn-lg"
+                    className="scanner-btn scanner-btn-primary"
                     disabled={cameras.length === 0}
                   >
-                    📱 Start Scanning
+                    <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Start Scanning
                   </button>
                 ) : (
                   <button
                     onClick={stopScanning}
-                    className="btn btn-danger btn-lg"
+                    className="scanner-btn scanner-btn-danger"
                   >
-                    ⏹️ Stop Scanning
+                    <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                    </svg>
+                    Stop Scanning
                   </button>
                 )}
               </div>
 
               {cameras.length === 0 && !error && (
-                <div className="alert alert-warning" style={{ marginTop: '1rem' }}>
-                  <h4>📱 Camera Setup Required</h4>
+                <div className="scanner-alert scanner-alert-warning">
+                  <h4>
+                    <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Camera Setup Required
+                  </h4>
                   <p>To use QR scanning on mobile:</p>
-                  <ol style={{ textAlign: 'left', marginTop: '1rem' }}>
+                  <ol>
                     <li>Allow camera permissions when prompted</li>
                     <li>Make sure you're using a supported browser (Chrome, Safari, Firefox)</li>
                     <li>Try refreshing the page</li>
                     <li>If still not working, use Manual Mode instead</li>
                   </ol>
-                  <button 
-                    onClick={() => window.location.reload()} 
-                    className="btn btn-outline"
-                    style={{ marginTop: '1rem' }}
-                  >
-                    🔄 Refresh Page
-                  </button>
+                  <div className="alert-actions">
+                    <button 
+                      onClick={() => window.location.reload()} 
+                      className="alert-btn alert-btn-primary"
+                    >
+                      <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Refresh Page
+                    </button>
+                  </div>
                 </div>
               )}
               
               {error && !showResultDialog && (
-                <div className="alert alert-error" style={{ marginTop: '1rem' }}>
-                  <h4>⚠️ Camera Issue</h4>
+                <div className="scanner-alert scanner-alert-error" style={{ marginTop: '1rem' }}>
+                  <h4>
+                    <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Camera Issue
+                  </h4>
                   <p>{error}</p>
-                  <div style={{ marginTop: '1rem' }}>
+                  <div className="alert-actions">
                     <button 
                       onClick={() => window.location.reload()} 
-                      className="btn btn-outline btn-sm"
-                      style={{ marginRight: '0.5rem' }}
+                      className="alert-btn alert-btn-primary"
                     >
-                      🔄 Refresh
+                      <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Refresh
                     </button>
                     <button 
                       onClick={() => setManualMode(true)} 
-                      className="btn btn-primary btn-sm"
+                      className="alert-btn alert-btn-primary"
                     >
-                      ✏️ Use Manual Mode
+                      <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Use Manual Mode
                     </button>
                   </div>
                 </div>
@@ -535,16 +515,21 @@ const Scanner = () => {
           </div>
         ) : (
           /* Manual Verification Mode */
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">✏️ Manual Verification</h3>
-              <p className="card-subtitle">
+          <div className="scanner-card">
+            <div className="scanner-card-header">
+              <h3 className="scanner-card-title">
+                <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Manual Verification
+              </h3>
+              <p className="scanner-card-subtitle">
                 Use when QR code scanning is not available
               </p>
             </div>
-            <div className="card-body">
-              <form onSubmit={handleManualVerification}>
-                <div style={{ marginBottom: '1rem' }}>
+            <div className="scanner-card-body">
+              <form onSubmit={handleManualVerification} className="manual-form">
+                <div className="form-group">
                   <label htmlFor="student_id">Student ID *</label>
                   <input
                     type="text"
@@ -556,7 +541,7 @@ const Scanner = () => {
                   />
                 </div>
 
-                <div style={{ marginBottom: '1.5rem' }}>
+                <div className="form-group">
                   <label htmlFor="reason">Reason for Manual Verification *</label>
                   <select
                     id="reason"
@@ -576,16 +561,21 @@ const Scanner = () => {
 
                 <button
                   type="submit"
-                  className="btn btn-primary btn-full"
+                  className="form-submit-btn"
                   disabled={loading}
                 >
                   {loading ? (
                     <>
-                      <div className="spinner" style={{ width: '16px', height: '16px' }} />
+                      <div className="spinner" style={{ width: '20px', height: '20px' }} />
                       Verifying...
                     </>
                   ) : (
-                    '✓ Verify Student'
+                    <>
+                      <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Verify Student
+                    </>
                   )}
                 </button>
               </form>
@@ -595,104 +585,47 @@ const Scanner = () => {
 
         {/* Result Dialog Modal */}
         {showResultDialog && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '1rem'
-          }}>
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              maxWidth: '500px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflow: 'auto',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-            }}>
+          <div className="result-modal-overlay">
+            <div className="result-modal">
               {result ? (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '2rem'
-                }}>
-                  <div style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '50%',
-                    backgroundColor: result.accessGranted ? '#dcfce7' : '#fef2f2',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 1.5rem',
-                    fontSize: '2.5rem'
-                  }}>
-                    {result.accessGranted ? '✅' : '❌'}
+                <div className="result-modal-content">
+                  <div className={`result-icon ${result.accessGranted ? 'granted' : 'denied'}`}>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {result.accessGranted ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      ) : (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      )}
+                    </svg>
                   </div>
 
-                  <h3 style={{
-                    color: result.accessGranted ? 'var(--success-color)' : 'var(--error-color)',
-                    marginBottom: '1rem',
-                    fontSize: '1.5rem'
-                  }}>
+                  <h3 className={`result-title ${result.accessGranted ? 'granted' : 'denied'}`}>
                     {result.accessGranted ? 'ACCESS GRANTED' : 'ACCESS DENIED'}
                   </h3>
 
                   {result.student && (
-                    <div style={{
-                      backgroundColor: '#f8fafc',
-                      borderRadius: '12px',
-                      padding: '1.5rem',
-                      marginBottom: '1.5rem',
-                      textAlign: 'left'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div className="student-info-card">
+                      <div className="student-info-header">
                         {result.student.photo_url ? (
                           <img
                             src={result.student.photo_url}
                             alt={result.student.name}
-                            style={{
-                              width: '60px',
-                              height: '60px',
-                              borderRadius: '50%',
-                              objectFit: 'cover'
-                            }}
+                            className="student-avatar"
                           />
                         ) : (
-                          <div style={{
-                            width: '60px',
-                            height: '60px',
-                            borderRadius: '50%',
-                            backgroundColor: '#e2e8f0',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '1.5rem'
-                          }}>
-                            👤
+                          <div className="student-avatar-placeholder">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
                           </div>
                         )}
                         
-                        <div>
-                          <h4 style={{ margin: '0 0 0.5rem', fontSize: '1.125rem' }}>{result.student.name}</h4>
-                          <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                            <strong>ID:</strong> {result.student.student_id}
-                          </p>
-                          <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                            <strong>Course:</strong> {result.student.course}
-                          </p>
-                          <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                            <strong>Year:</strong> {result.student.year_level}
-                          </p>
-                          <span className={`badge ${
-                            result.student.enrollment_status === 'active' ? 'badge-success' : 'badge-warning'
-                          }`} style={{ fontSize: '0.75rem' }}>
+                        <div className="student-details">
+                          <h4>{result.student.name}</h4>
+                          <p><strong>ID:</strong> {result.student.student_id}</p>
+                          <p><strong>Course:</strong> {result.student.course}</p>
+                          <p><strong>Year:</strong> {result.student.year_level}</p>
+                          <span className={`student-status-badge ${result.student.enrollment_status}`}>
                             {result.student.enrollment_status}
                           </span>
                         </div>
@@ -701,72 +634,78 @@ const Scanner = () => {
                   )}
 
                   {result.reason && (
-                    <div className="alert alert-warning" style={{ marginBottom: '1.5rem' }}>
+                    <div className="scanner-alert scanner-alert-warning" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
                       <strong>Reason:</strong> {result.reason}
                     </div>
                   )}
 
-                  <div style={{
-                    fontSize: '0.875rem',
-                    color: 'var(--text-muted)',
-                    marginBottom: '2rem',
-                    textAlign: 'left',
-                    backgroundColor: '#f1f5f9',
-                    padding: '1rem',
-                    borderRadius: '8px'
-                  }}>
-                    <p style={{ margin: '0.25rem 0' }}>
-                      <strong>📍 Location:</strong> {result.location}
+                  <div className="result-metadata">
+                    <p>
+                      <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <strong>Location:</strong> {result.location}
                     </p>
-                    <p style={{ margin: '0.25rem 0' }}>
-                      <strong>🕒 Time:</strong> {new Date(result.timestamp).toLocaleString()}
+                    <p>
+                      <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <strong>Time:</strong> {new Date(result.timestamp).toLocaleString()}
                     </p>
                     {result.verificationType && (
-                      <p style={{ margin: '0.25rem 0' }}>
-                        <strong>🔍 Method:</strong> {result.verificationType === 'manual' ? 'Manual Verification' : 'QR Code Scan'}
+                      <p>
+                        <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <strong>Method:</strong> {result.verificationType === 'manual' ? 'Manual Verification' : 'QR Code Scan'}
                       </p>
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                    <button onClick={startNewScan} className="btn btn-primary">
-                      📱 Scan Again
+                  <div className="result-actions">
+                    <button onClick={startNewScan} className="result-btn result-btn-primary">
+                      <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                      </svg>
+                      Scan Again
                     </button>
-                    <button onClick={clearResult} className="btn btn-outline">
-                      ✓ Done
+                    <button onClick={clearResult} className="result-btn result-btn-outline">
+                      <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Done
                     </button>
                   </div>
                 </div>
               ) : (
-                <div style={{ padding: '2rem', textAlign: 'center' }}>
-                  <div style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '50%',
-                    backgroundColor: '#fef2f2',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 1.5rem',
-                    fontSize: '2.5rem'
-                  }}>
-                    ⚠️
+                <div className="result-modal-content">
+                  <div className="result-icon denied">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
                   </div>
                   
-                  <h3 style={{ color: 'var(--error-color)', marginBottom: '1rem' }}>
+                  <h3 className="result-title denied">
                     Scan Failed
                   </h3>
                   
-                  <div className="alert alert-error" style={{ marginBottom: '2rem' }}>
+                  <div className="scanner-alert scanner-alert-error" style={{ marginBottom: '2rem' }}>
                     {error}
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                    <button onClick={startNewScan} className="btn btn-primary">
-                      🔄 Try Again
+                  <div className="result-actions">
+                    <button onClick={startNewScan} className="result-btn result-btn-primary">
+                      <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Try Again
                     </button>
-                    <button onClick={clearResult} className="btn btn-outline">
-                      ✓ Done
+                    <button onClick={clearResult} className="result-btn result-btn-outline">
+                      <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Done
                     </button>
                   </div>
                 </div>
