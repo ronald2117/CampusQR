@@ -4,6 +4,9 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const path = require('path');
+const https = require('https');
+const http = require('http');
+const fs = require('fs');
 require('dotenv').config();
 
 const { testConnection } = require('./config/database');
@@ -120,12 +123,53 @@ const startServer = async () => {
       process.exit(1);
     }
     
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Local: http://localhost:${PORT}/api/health`);
-      console.log(`🌐 Network: http://0.0.0.0:${PORT}/api/health`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    });
+    // Check for HTTPS certificates
+    const certPath = path.join(__dirname, '../client/10.154.13.206+2.pem');
+    const keyPath = path.join(__dirname, '../client/10.154.13.206+2-key.pem');
+    
+    const useHttps = fs.existsSync(certPath) && fs.existsSync(keyPath);
+    
+    if (useHttps) {
+      // HTTPS Server
+      const httpsOptions = {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath)
+      };
+      
+      const httpsServer = https.createServer(httpsOptions, app);
+      httpsServer.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 HTTPS Server running on port ${PORT}`);
+        console.log(`📊 Local: https://localhost:${PORT}/api/health`);
+        console.log(`🌐 Network: https://0.0.0.0:${PORT}/api/health`);
+        console.log(`🔒 HTTPS Enabled (for camera access on mobile)`);
+        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      });
+      
+      // Also start HTTP server for redirects (optional)
+      const httpPort = 3000;
+      const httpServer = http.createServer((req, res) => {
+        res.writeHead(301, { "Location": `https://${req.headers.host.replace(httpPort, PORT)}${req.url}` });
+        res.end();
+      });
+      
+      httpServer.listen(httpPort, '0.0.0.0', () => {
+        console.log(`↪️  HTTP Redirect server running on port ${httpPort}`);
+      });
+    } else {
+      // HTTP Server (fallback)
+      console.log('⚠️  HTTPS certificates not found. Running in HTTP mode.');
+      console.log('⚠️  Camera features may not work on mobile devices.');
+      console.log(`📁 Looking for certificates at:`);
+      console.log(`   - ${certPath}`);
+      console.log(`   - ${keyPath}`);
+      
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 HTTP Server running on port ${PORT}`);
+        console.log(`📊 Local: http://localhost:${PORT}/api/health`);
+        console.log(`🌐 Network: http://0.0.0.0:${PORT}/api/health`);
+        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      });
+    }
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);

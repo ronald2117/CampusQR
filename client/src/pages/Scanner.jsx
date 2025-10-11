@@ -461,10 +461,11 @@ const Scanner = () => {
                   </h4>
                   <p>To use QR scanning on mobile:</p>
                   <ol>
-                    <li>Allow camera permissions when prompted</li>
-                    <li>Make sure you're using a supported browser (Chrome, Safari, Firefox)</li>
-                    <li>Try refreshing the page</li>
-                    <li>If still not working, use Manual Mode instead</li>
+                    <li><strong>HTTPS Required:</strong> Camera access requires HTTPS connection. Access via https://your-ip:5173</li>
+                    <li><strong>Allow Permissions:</strong> Grant camera permission when prompted by your browser</li>
+                    <li><strong>Supported Browsers:</strong> Use Chrome, Safari, or Firefox (latest versions)</li>
+                    <li><strong>Current Protocol:</strong> {window.location.protocol === 'https:' ? '✓ HTTPS (Good)' : '⚠️ HTTP (Camera may not work)'}</li>
+                    <li>If camera still doesn't work, try refreshing or use Manual Mode</li>
                   </ol>
                   <div className="alert-actions">
                     <button 
