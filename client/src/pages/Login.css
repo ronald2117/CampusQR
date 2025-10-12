@@ -75,26 +75,10 @@
   gap: 2px;
 }
 
-.qr-pixel {
-  background: white;
-  border-radius: 1px;
+.logo-image {
+  width: 50px;
+  height: 50px;
 }
-
-.qr-pixel:nth-child(1),
-.qr-pixel:nth-child(3),
-.qr-pixel:nth-child(4),
-.qr-pixel:nth-child(5),
-.qr-pixel:nth-child(7),
-.qr-pixel:nth-child(8),
-.qr-pixel:nth-child(9) {
-  background: white;
-}
-
-.qr-pixel:nth-child(2),
-.qr-pixel:nth-child(6) {
-  background: rgba(255, 255, 255, 0.3);
-}
-
 .login-title {
   margin-bottom: 0.5rem;
   color: #1e293b;
@@ -298,7 +282,7 @@
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: darkx) {
   .login-card {
     background: rgba(30, 41, 59, 0.95);
     border: 1px solid rgba(71, 85, 105, 0.3);

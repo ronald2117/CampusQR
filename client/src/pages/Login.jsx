@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import './Login.css'
+import logo from '../../public/qr-logo.svg'
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -39,17 +40,7 @@ const Login = () => {
         <div className="login-card-body">
           <div className="login-header">
             <div className="qr-logo">
-              <div className="qr-icon">
-                <div className="qr-pixel"></div>
-                <div className="qr-pixel"></div>
-                <div className="qr-pixel"></div>
-                <div className="qr-pixel"></div>
-                <div className="qr-pixel"></div>
-                <div className="qr-pixel"></div>
-                <div className="qr-pixel"></div>
-                <div className="qr-pixel"></div>
-                <div className="qr-pixel"></div>
-              </div>
+                <img src={logo} alt="CampusQR Logo" className="logo-image" />
             </div>
             <h1 className="login-title">CampusQR</h1>
             <p className="login-subtitle">
