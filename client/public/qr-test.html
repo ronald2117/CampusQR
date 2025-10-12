@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Test - CampusQR</title>
+    <script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        video {
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            word-break: break-all;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .start { background: #4CAF50; color: white; }
+        .stop { background: #f44336; color: white; }
+        .test { background: #2196F3; color: white; }
+    </style>
+</head>
+<body>
+    <h1>📱 QR Code Scanner Test</h1>
+    <p>This page will show you exactly what data is being read from your QR code.</p>
+    
+    <video id="video"></video>
+    
+    <div>
+        <button class="start" onclick="startScanner()">Start Scanner</button>
+        <button class="stop" onclick="stopScanner()">Stop Scanner</button>
+        <button class="test" onclick="testAPI()">Test API Connection</button>
+    </div>
+    
+    <div id="result">
+        <strong>Scan Result:</strong><br>
+        <span id="resultText">Waiting for scan...</span>
+    </div>
+    
+    <div id="apiTest" style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; display: none;">
+        <strong>API Test Result:</strong><br>
+        <span id="apiTestText"></span>
+    </div>
+
+    <script>
+        let scanner = null;
+        const video = document.getElementById('video');
+        const resultText = document.getElementById('resultText');
+        const apiTest = document.getElementById('apiTest');
+        const apiTestText = document.getElementById('apiTestText');
+
+        async function startScanner() {
+            try {
+                resultText.textContent = 'Starting camera...';
+                
+                scanner = new QrScanner(
+                    video,
+                    result => {
+                        console.log('QR Code Scanned:', result);
+                        resultText.innerHTML = `
+                            <strong>Success! QR Code Data:</strong><br><br>
+                            <strong>Data:</strong> ${result.data}<br><br>
+                            <strong>Length:</strong> ${result.data.length} characters<br><br>
+                            <strong>First 100 chars:</strong> ${result.data.substring(0, 100)}...<br><br>
+                            <strong>Type:</strong> ${typeof result.data}
+                        `;
+                        
+                        // Try to send to API
+                        sendToAPI(result.data);
+                    },
+                    {
+                        highlightScanRegion: true,
+                        highlightCodeOutline: true,
+                    }
+                );
+
+                await scanner.start();
+                resultText.textContent = 'Camera ready! Point at QR code...';
+            } catch (error) {
+                console.error('Scanner error:', error);
+                resultText.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        function stopScanner() {
+            if (scanner) {
+                scanner.stop();
+                scanner.destroy();
+                scanner = null;
+                resultText.textContent = 'Scanner stopped.';
+            }
+        }
+
+        async function sendToAPI(qrData) {
+            try {
+                const response = await fetch('https://10.154.13.206:3001/api/scan/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    body: JSON.stringify({
+                        qrData: qrData,
+                        location: 'Test Page'
+                    })
+                });
+
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                apiTest.style.display = 'block';
+                apiTestText.innerHTML = `
+                    <strong>Status:</strong> ${response.status}<br>
+                    <strong>Response:</strong> ${JSON.stringify(data, null, 2)}
+                `;
+            } catch (error) {
+                console.error('API Error:', error);
+                apiTest.style.display = 'block';
+                apiTestText.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+
+        async function testAPI() {
+            apiTest.style.display = 'block';
+            apiTestText.textContent = 'Testing API connection...';
+            
+            try {
+                const response = await fetch('https://10.154.13.206:3001/api/health');
+                const data = await response.json();
+                apiTestText.innerHTML = `
+                    <strong>✅ API is reachable!</strong><br>
+                    Response: ${JSON.stringify(data, null, 2)}
+                `;
+            } catch (error) {
+                apiTestText.innerHTML = `<strong>❌ API connection failed:</strong> ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

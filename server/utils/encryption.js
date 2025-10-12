@@ -52,18 +52,25 @@ const generateStudentQRData = (student) => {
 
 const validateQRData = (encryptedData) => {
   try {
+    console.log('=== QR Code Validation Debug ===');
+    console.log('Received encrypted data:', encryptedData?.substring(0, 50) + '...');
+    console.log('Encrypted data length:', encryptedData?.length);
+    
     const decryptedData = decrypt(encryptedData);
+    console.log('Decrypted data:', decryptedData);
+    
     const qrData = JSON.parse(decryptedData);
+    console.log('Parsed QR data:', qrData);
     
-    // Check if QR code is not too old (24 hours)
-    const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-    if (Date.now() - qrData.timestamp > maxAge) {
-      throw new Error('QR code expired');
-    }
+    // No expiration for student QR codes - they're permanent IDs for gate access
+    // QR codes remain valid as long as the student is active in the system
     
+    console.log('✅ QR code validation successful');
     return qrData;
   } catch (error) {
-    throw new Error('Invalid or expired QR code');
+    console.error('❌ QR code validation failed:', error.message);
+    console.error('Error stack:', error.stack);
+    throw new Error('Invalid QR code');
   }
 };
 

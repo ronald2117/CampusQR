@@ -10,7 +10,13 @@ router.post('/verify', auth, async (req, res) => {
   try {
     const { qrData, location } = req.body;
 
+    console.log('=== Scan Verification Request ===');
+    console.log('Location:', location);
+    console.log('QR Data received:', qrData?.substring(0, 50) + '...');
+    console.log('User:', req.user.id);
+
     if (!qrData) {
+      console.log('❌ No QR data provided');
       return res.status(400).json({
         success: false,
         message: 'QR code data is required'
@@ -21,7 +27,9 @@ router.post('/verify', auth, async (req, res) => {
     let studentData;
     try {
       studentData = validateQRData(qrData);
+      console.log('✅ QR data validated:', studentData);
     } catch (error) {
+      console.error('❌ QR validation error:', error.message);
       return res.status(400).json({
         success: false,
         message: error.message

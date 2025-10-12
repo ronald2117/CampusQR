@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import api from '../services/api';
+import { scannerService } from '../services/api';
 import QrScanner from 'qr-scanner';
 import './Scanner.css';
 
@@ -210,18 +210,46 @@ const Scanner = () => {
   const handleScanResult = async (qrData) => {
     if (!qrData || loading) return
 
+    console.log('=== Scanner Frontend Debug ===');
+    console.log('QR Data scanned:', qrData);
+    console.log('QR Data length:', qrData?.length);
+    console.log('QR Data type:', typeof qrData);
+    console.log('Location:', location);
+
     setLoading(true)
+    setError('') // Clear any previous errors
     try {
+      console.log('Sending to API...');
       const response = await scannerService.verifyQR(qrData, location)
-      setResult(response.data)
+      console.log('Raw API Response:', response);
+      console.log('Response type:', typeof response);
+      console.log('Response keys:', Object.keys(response || {}));
+      console.log('Response.data:', response.data);
+      console.log('Response.data type:', typeof response.data);
+      
+      // The API interceptor returns the whole response body: { success, message, data }
+      // We need the nested data object which contains { student, accessGranted, etc }
+      if (response && response.data) {
+        console.log('✅ Setting result to response.data:', response.data);
+        setResult(response.data)
+        setShowResultDialog(true)
+      } else {
+        console.error('❌ Unexpected response structure:', response);
+        throw new Error('Invalid response structure');
+      }
       stopScanning()
-      setShowResultDialog(true)
     } catch (error) {
-      console.error('QR verification failed:', error)
-      setError(error.response?.data?.message || 'QR code verification failed')
+      console.error('❌ QR verification failed:', error)
+      console.error('Error type:', error.constructor.name);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response);
+      console.error('Error response data:', error.response?.data);
+      
+      const errorMessage = error.response?.data?.message || error.message || 'QR code verification failed';
+      setError(errorMessage)
       setResult({
         accessGranted: false,
-        reason: error.response?.data?.message || 'Invalid QR code'
+        reason: errorMessage
       })
       stopScanning()
       setShowResultDialog(true)
