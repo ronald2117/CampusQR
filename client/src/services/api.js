@@ -64,4 +64,14 @@ export const dashboardService = {
   getHealth: () => api.get('/dashboard/health')
 }
 
+// User management services
+export const userService = {
+  getAll: (params) => api.get('/users', { params }),
+  getById: (id) => api.get(`/users/${id}`),
+  create: (userData) => api.post('/users', userData),
+  update: (id, userData) => api.put(`/users/${id}`, userData),
+  delete: (id) => api.delete(`/users/${id}`),
+  getStats: () => api.get('/users/stats/summary')
+}
+
 export default api

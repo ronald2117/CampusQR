@@ -11,7 +11,7 @@ A comprehensive QR code-based student verification system for campus security an
 - 📋 **Access Logging**: Complete audit trail with detailed reporting and CSV export
 - ✏️ **Manual Verification**: Backup verification system for emergency access
 - 🎨 **Modern UI**: Clean, responsive interface with pure CSS styling
-- 🔒 **Role-based Access**: Admin, Security, and Staff user roles with appropriate permissions
+- 🔒 **Role-based Access**: Admin and Security user roles with appropriate permissions
 
 ## 🛠️ Tech Stack
 

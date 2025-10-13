@@ -46,6 +46,12 @@ const Layout = ({ children }) => {
       path: '/logs',
       icon: '📋',
       roles: ['admin', 'security']
+    },
+    {
+      name: 'Users',
+      path: '/users',
+      icon: '👤',
+      roles: ['admin']
     }
   ]
 

@@ -16,6 +16,7 @@ const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/students');
 const scanRoutes = require('./routes/scan');
 const dashboardRoutes = require('./routes/dashboard');
+const userRoutes = require('./routes/users');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -76,8 +77,15 @@ app.use(cors({
     console.log('⚠️ Allowing origin:', origin, '(development mode)');
     return callback(null, true);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // Cache preflight for 10 minutes
 }));
+
+// Handle preflight requests explicitly
+app.options('*', cors());
 
 // Logging
 app.use(morgan('combined'));
@@ -94,6 +102,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/users', userRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

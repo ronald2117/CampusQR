@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import Students from './pages/Students'
 import Scanner from './pages/Scanner'
 import AccessLogs from './pages/AccessLogs'
+import Users from './pages/Users'
 import LoadingSpinner from './components/LoadingSpinner'
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
         <Route path="/students" element={<Students />} />
         <Route path="/scanner" element={<Scanner />} />
         <Route path="/logs" element={<AccessLogs />} />
+        <Route path="/users" element={<Users />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Layout>
