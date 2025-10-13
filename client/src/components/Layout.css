@@ -120,7 +120,6 @@
   background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
   border-right-color: #3b82f6;
   font-weight: 600;
-  transform: translateX(4px);
 }
 
 .nav-icon {
