@@ -353,7 +353,7 @@ const Scanner = () => {
                 </svg>
                 QR Code Scanner
               </h3>
-              {cameras.length > 1 && (
+              {/* {cameras.length > 1 && (
                 <div className="camera-selector">
                   <label>Camera:</label>
                   <select
@@ -372,53 +372,9 @@ const Scanner = () => {
                       )
                     })}
                   </select>
-                  {cameras.length > 1 && (
-                    <div className="camera-quick-switches">
-                      <button
-                        onClick={() => {
-                          const backCam = cameras.find(cam => 
-                            cam.label.toLowerCase().includes('back') || 
-                            cam.label.toLowerCase().includes('environment') || 
-                            cam.label.toLowerCase().includes('rear')
-                          )
-                          if (backCam) switchCamera(backCam.id)
-                        }}
-                        className="camera-quick-btn"
-                        disabled={!cameras.some(cam => 
-                          cam.label.toLowerCase().includes('back') || 
-                          cam.label.toLowerCase().includes('environment') || 
-                          cam.label.toLowerCase().includes('rear')
-                        )}
-                      >
-                        <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Use Back Camera
-                      </button>
-                      <button
-                        onClick={() => {
-                          const frontCam = cameras.find(cam => 
-                            cam.label.toLowerCase().includes('front') || 
-                            cam.label.toLowerCase().includes('user') || 
-                            (!cam.label.toLowerCase().includes('back') && 
-                             !cam.label.toLowerCase().includes('environment') && 
-                             !cam.label.toLowerCase().includes('rear'))
-                          )
-                          if (frontCam) switchCamera(frontCam.id)
-                        }}
-                        className="camera-quick-btn"
-                      >
-                        <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Use Front Camera
-                      </button>
-                    </div>
-                  )}
+
                 </div>
-              )}
+              )} */}
             </div>
             <div className="scanner-card-body">
               <div className="video-container">
