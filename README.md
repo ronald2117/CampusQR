@@ -55,19 +55,43 @@ CampusQR/
 - Node.js 16+ and npm
 - MySQL 8.0+ server
 - Modern web browser with camera support
+- **mkcert** (for HTTPS - required for mobile camera access)
 
-### Option 1: Automated Setup
+### Option 1: Automated Setup (Linux/macOS/Git Bash)
 
 ```bash
 # Clone the repository
 git clone <your-repo-url>
 cd CampusQR
 
-# Run the setup script
+# Make script executable and run
+chmod +x setup.sh
 ./setup.sh
 ```
 
-### Option 2: Manual Setup
+### Option 2: Automated Setup (Windows PowerShell)
+
+```powershell
+# Clone the repository
+git clone <your-repo-url>
+cd CampusQR
+
+# Run PowerShell setup script
+.\setup.ps1
+```
+
+### Option 3: Automated Setup (Windows Command Prompt)
+
+```batch
+REM Clone the repository
+git clone <your-repo-url>
+cd CampusQR
+
+REM Run batch setup script
+setup.bat
+```
+
+### Option 4: Manual Setup
 
 1. **Install Dependencies**
    ```bash
@@ -80,7 +104,7 @@ cd CampusQR
 
 2. **Database Configuration**
    ```bash
-   # Update server/.env with your MySQL credentials
+   # Copy environment template
    cp server/.env.example server/.env
    # Edit server/.env with your database settings
    ```
@@ -91,7 +115,9 @@ cd CampusQR
    npm run db:setup
    ```
 
-4. **Start Development Servers**
+4. **Configure HTTPS** (See detailed instructions below)
+
+5. **Start Development Servers**
    ```bash
    # Start both frontend and backend
    npm run dev
@@ -100,6 +126,358 @@ cd CampusQR
    npm run server:dev  # Backend only
    npm run client:dev  # Frontend only
    ```
+
+## 🔒 HTTPS Configuration (Required for Mobile Camera Access)
+
+Mobile browsers require HTTPS to access the device camera. Follow these platform-specific instructions:
+
+### Step 1: Find Your Network IP Address
+
+#### On Windows:
+```powershell
+# PowerShell
+Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -like "192.168.*" -or $_.IPAddress -like "10.*"}
+
+# OR Command Prompt
+ipconfig
+# Look for "IPv4 Address" under your active network adapter
+```
+
+#### On macOS:
+```bash
+# Terminal
+ifconfig | grep "inet " | grep -v 127.0.0.1
+
+# OR
+ipconfig getifaddr en0  # For Wi-Fi
+ipconfig getifaddr en1  # For Ethernet
+```
+
+#### On Linux:
+```bash
+# Terminal
+ip addr show | grep "inet " | grep -v 127.0.0.1
+
+# OR
+hostname -I
+```
+
+**Example IP addresses:**
+- `192.168.1.100` (Home networks)
+- `10.154.13.206` (Corporate networks)
+- `172.16.0.50` (Private networks)
+
+### Step 2: Install mkcert
+
+#### On Windows:
+
+**Option A: Using Chocolatey (Recommended)**
+```powershell
+# Install Chocolatey (if not installed)
+# Run PowerShell as Administrator
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install mkcert
+choco install mkcert
+
+# Install local CA
+mkcert -install
+```
+
+**Option B: Using Scoop**
+```powershell
+scoop bucket add extras
+scoop install mkcert
+
+# Install local CA
+mkcert -install
+```
+
+**Option C: Manual Download**
+1. Download from: https://github.com/FiloSottile/mkcert/releases
+2. Rename to `mkcert.exe`
+3. Add to PATH or use full path
+4. Run: `mkcert -install`
+
+#### On macOS:
+```bash
+# Using Homebrew
+brew install mkcert
+
+# Install local CA
+mkcert -install
+```
+
+#### On Linux:
+```bash
+# Ubuntu/Debian
+sudo apt install libnss3-tools
+wget https://github.com/FiloSottile/mkcert/releases/latest/download/mkcert-v*-linux-amd64
+sudo mv mkcert-v*-linux-amd64 /usr/local/bin/mkcert
+sudo chmod +x /usr/local/bin/mkcert
+
+# Fedora
+sudo dnf install nss-tools
+sudo dnf install mkcert
+
+# Arch Linux
+sudo pacman -S mkcert
+
+# Install local CA
+mkcert -install
+```
+
+### Step 3: Generate SSL Certificates
+
+Navigate to the `client` folder and generate certificates for your IP:
+
+```bash
+cd client
+
+# Replace YOUR_IP with your actual IP address from Step 1
+# Example: mkcert 192.168.1.100 localhost 127.0.0.1 ::1
+mkcert YOUR_IP localhost 127.0.0.1 ::1
+```
+
+**Windows PowerShell:**
+```powershell
+cd client
+mkcert 192.168.1.100 localhost 127.0.0.1 ::1
+```
+
+**This creates two files:**
+- `YOUR_IP+3.pem` (Certificate)
+- `YOUR_IP+3-key.pem` (Private Key)
+
+### Step 4: Configure Environment Variables
+
+#### Backend (.env in `server/` folder):
+
+```bash
+# server/.env
+PORT=3001
+DATABASE_HOST=localhost
+DATABASE_PORT=3306
+DATABASE_NAME=campusqr
+DATABASE_USER=root
+DATABASE_PASSWORD=your_password
+
+# Security
+JWT_SECRET=your_super_secure_jwt_secret_key_change_in_production
+ENCRYPTION_KEY=campusqr_secure_encryption_key_2025_do_not_share
+
+# Network (use your actual IP)
+FRONTEND_URL=https://192.168.1.100:5173
+
+# Environment
+NODE_ENV=development
+```
+
+#### Frontend (.env in `client/` folder):
+
+```bash
+# client/.env
+# Replace with your actual IP address
+VITE_API_URL=https://192.168.1.100:3001/api
+```
+
+### Step 5: Update vite.config.js
+
+Edit `client/vite.config.js` to use your IP and certificates:
+
+```javascript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import fs from 'fs'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    host: '0.0.0.0', // Listen on all network interfaces
+    port: 5173,
+    https: {
+      // Update these filenames to match your generated certificates
+      key: fs.readFileSync(path.resolve(__dirname, '192.168.1.100+3-key.pem')),
+      cert: fs.readFileSync(path.resolve(__dirname, '192.168.1.100+3.pem')),
+    },
+    proxy: {
+      '/api': {
+        target: 'https://192.168.1.100:3001', // Your backend URL
+        changeOrigin: true,
+        secure: false,
+      }
+    }
+  }
+})
+```
+
+### Step 6: Update Backend HTTPS Configuration
+
+The backend server (`server/index.js`) should already be configured for HTTPS. Verify it includes:
+
+```javascript
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
+
+// HTTPS configuration
+const httpsOptions = {
+  key: fs.readFileSync(path.join(__dirname, '../client/192.168.1.100+3-key.pem')),
+  cert: fs.readFileSync(path.join(__dirname, '../client/192.168.1.100+3.pem'))
+};
+
+// Create HTTPS server
+https.createServer(httpsOptions, app).listen(PORT, '0.0.0.0', () => {
+  console.log(`🔒 HTTPS Server running on https://192.168.1.100:${PORT}`);
+});
+```
+
+### Step 7: Configure Firewall
+
+#### Windows Firewall:
+
+**Option A: Using GUI**
+1. Open "Windows Defender Firewall with Advanced Security"
+2. Click "Inbound Rules" → "New Rule"
+3. Select "Port" → Next
+4. Select TCP, enter ports: `3001,5173` → Next
+5. Select "Allow the connection" → Next
+6. Apply to all profiles (Domain, Private, Public) → Next
+7. Name it "CampusQR" → Finish
+
+**Option B: Using PowerShell (as Administrator)**
+```powershell
+# Allow backend port
+New-NetFirewallRule -DisplayName "CampusQR Backend" -Direction Inbound -Protocol TCP -LocalPort 3001 -Action Allow
+
+# Allow frontend port
+New-NetFirewallRule -DisplayName "CampusQR Frontend" -Direction Inbound -Protocol TCP -LocalPort 5173 -Action Allow
+```
+
+#### macOS Firewall:
+```bash
+# System Preferences → Security & Privacy → Firewall → Firewall Options
+# Click "+" and add Node.js
+# Select "Allow incoming connections"
+```
+
+#### Linux Firewall:
+
+**Ubuntu/Debian (UFW):**
+```bash
+sudo ufw allow 3001/tcp
+sudo ufw allow 5173/tcp
+sudo ufw reload
+```
+
+**Fedora/RHEL (firewalld):**
+```bash
+sudo firewall-cmd --add-port=3001/tcp --permanent
+sudo firewall-cmd --add-port=5173/tcp --permanent
+sudo firewall-cmd --reload
+```
+
+### Step 8: Start the Application
+
+```bash
+# Terminal 1 - Backend
+cd server
+npm run dev
+
+# Terminal 2 - Frontend  
+cd client
+npm run dev
+```
+
+## 📱 Mobile Access
+
+### On Your Computer:
+```
+https://192.168.1.100:5173
+```
+
+### On Mobile Devices (same network):
+
+1. **Accept Certificate Warning**
+   - Open browser on mobile device
+   - Navigate to: `https://YOUR_IP:5173`
+   - You'll see a security warning
+   - Click "Advanced" → "Proceed to site" (or similar)
+   - Do the same for backend: `https://YOUR_IP:3001/api/health`
+
+2. **iOS Safari:**
+   - Go to Settings → General → About → Certificate Trust Settings
+   - Enable full trust for the mkcert root certificate
+
+3. **Android Chrome:**
+   - Visit the site and accept the certificate warning
+   - Alternatively, install the mkcert root CA certificate manually
+
+### Troubleshooting Mobile Access
+
+**Camera Permission Denied:**
+- Ensure HTTPS is working (check the lock icon in browser)
+- Grant camera permission when prompted
+- Check browser settings → Site permissions
+
+**Cannot Connect:**
+- Verify mobile device is on the same WiFi network
+- Check firewall settings
+- Verify IP address hasn't changed (`ipconfig`/`ifconfig`)
+- Ensure both frontend and backend servers are running
+
+**Certificate Errors:**
+- Accept certificates for both frontend and backend URLs
+- Clear browser cache and try again
+- Verify mkcert root CA is installed on the device
+
+## 🌐 Network Configuration for Different Environments
+
+### Scenario 1: Development on Single Computer (localhost)
+```bash
+# client/.env
+VITE_API_URL=https://localhost:3001/api
+
+# server/.env
+FRONTEND_URL=https://localhost:5173
+
+# Access at: https://localhost:5173
+```
+
+### Scenario 2: Testing on Mobile (same WiFi)
+```bash
+# Find your IP first (e.g., 192.168.1.100)
+
+# client/.env
+VITE_API_URL=https://192.168.1.100:3001/api
+
+# server/.env
+FRONTEND_URL=https://192.168.1.100:5173
+
+# Access at: https://192.168.1.100:5173
+```
+
+### Scenario 3: Different WiFi Network
+When you move to a new network:
+
+1. Find new IP address
+2. Generate new certificates with new IP:
+   ```bash
+   cd client
+   mkcert NEW_IP localhost 127.0.0.1 ::1
+   ```
+3. Update `.env` files with new IP
+4. Update `vite.config.js` certificate filenames
+5. Update `server/index.js` certificate paths
+6. Restart both servers
+
+**Pro Tip:** Use the [Setup Wizard](/setup-wizard) to automatically generate configuration for new networks!
+
+### Scenario 4: Production Deployment
+Use proper SSL certificates from a trusted CA (Let's Encrypt, etc.) instead of mkcert.
 
 ### Option 3: Docker Deployment
 
@@ -114,9 +492,22 @@ docker-compose up -d
 
 ## 🌐 Application Access
 
-- **Frontend Application**: http://localhost:5173
-- **Backend API**: http://localhost:3001
-- **API Health Check**: http://localhost:3001/api/health
+### Local Development
+- **Frontend**: https://localhost:5173
+- **Backend API**: https://localhost:3001
+- **Setup Wizard**: https://localhost:5173/setup-wizard (no login required)
+- **API Health Check**: https://localhost:3001/api/health
+
+### Mobile Access (Same Network)
+Replace `localhost` with your computer's IP address:
+- **Frontend**: https://192.168.1.100:5173
+- **Backend API**: https://192.168.1.100:3001
+- **Setup Wizard**: https://192.168.1.100:5173/setup-wizard
+
+⚠️ **Important**: 
+- Use HTTPS (not HTTP) for camera access on mobile
+- Accept certificate warnings on first visit
+- Ensure devices are on the same WiFi network
 
 ## 🔑 Default Credentials
 
@@ -266,28 +657,147 @@ npm run test:integration
 ### Common Issues
 
 1. **Database Connection Failed**
-   - Verify MySQL server is running
-   - Check credentials in `.env` file
-   - Ensure database exists
+   - Verify MySQL server is running:
+     - **Windows**: Check Services (Win + R → `services.msc`)
+     - **macOS**: `brew services list`
+     - **Linux**: `sudo systemctl status mysql`
+   - Check credentials in `server/.env` file
+   - Ensure database exists: `CREATE DATABASE campusqr;`
+   - Test connection: `mysql -u root -p -h localhost campusqr`
 
 2. **Camera Not Working**
-   - Grant camera permissions in browser
-   - Use HTTPS in production for camera access
-   - Check device compatibility
+   - **HTTPS Required**: Mobile browsers require HTTPS for camera access
+   - Grant camera permissions in browser settings
+   - Check for HTTPS (look for lock icon in address bar)
+   - Accept certificate warnings on both frontend and backend URLs
+   - Try different browser (Chrome recommended)
+   - On iOS: Settings → Safari → Camera (ensure not blocked)
+   - On Android: Browser → Settings → Site Settings → Camera
 
 3. **QR Code Generation Fails**
-   - Verify encryption key in `.env`
-   - Check student data completeness
+   - Verify `ENCRYPTION_KEY` is set in `server/.env`
+   - Key must remain constant (don't change after generating QR codes)
+   - Check student data completeness (all required fields)
    - Ensure proper database connectivity
+
+4. **Certificate Errors / HTTPS Not Working**
+   - **Verify mkcert is installed**: Run `mkcert -version`
+   - **Install root CA**: Run `mkcert -install`
+   - **Generate certificates**: `cd client && mkcert YOUR_IP localhost 127.0.0.1 ::1`
+   - **Check certificate files exist** in `client/` folder
+   - **Update paths** in `vite.config.js` and `server/index.js`
+   - **Restart servers** after certificate changes
+   - **On Windows**: Run PowerShell as Administrator for `mkcert -install`
+
+5. **Cannot Access from Mobile Device**
+   - **Same Network**: Ensure mobile and computer are on same WiFi
+   - **Find IP**: Use `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
+   - **Firewall**: Check firewall allows ports 3001 and 5173
+   - **Accept Certificates**: 
+     - Visit `https://YOUR_IP:5173` and accept warning
+     - Visit `https://YOUR_IP:3001/api/health` and accept warning
+   - **Clear Cache**: Clear browser cache and cookies
+   - **Try Different Browser**: Chrome works best
+
+6. **"Mixed Content" Errors**
+   - Ensure BOTH frontend and backend use HTTPS
+   - Check `VITE_API_URL` in `client/.env` starts with `https://`
+   - Verify backend is running with HTTPS certificates
+   - Check browser console for exact error messages
+
+7. **Port Already in Use**
+   - **Windows**: 
+     ```powershell
+     # Find process using port 3001
+     netstat -ano | findstr :3001
+     # Kill process (replace PID)
+     taskkill /PID <PID> /F
+     ```
+   - **macOS/Linux**:
+     ```bash
+     # Find and kill process on port 3001
+     lsof -ti:3001 | xargs kill -9
+     # Or for port 5173
+     lsof -ti:5173 | xargs kill -9
+     ```
+
+8. **IP Address Changed**
+   - Your IP may change when connecting to different networks
+   - Find new IP: `ipconfig` / `ifconfig` / `ip addr`
+   - Generate new certificates with new IP
+   - Update `.env` files
+   - Update `vite.config.js`
+   - Restart servers
+   - **Quick Fix**: Use the [Setup Wizard](/setup-wizard) to reconfigure
+
+9. **Windows-Specific Issues**
+   - **PowerShell Execution Policy**:
+     ```powershell
+     Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+     ```
+   - **Path Issues**: Use forward slashes `/` in config files even on Windows
+   - **Antivirus**: Temporarily disable antivirus if blocking connections
+   - **Windows Firewall**: Create inbound rules for ports 3001 and 5173
+
+10. **Module Not Found Errors**
+    - Delete `node_modules` and reinstall:
+      ```bash
+      # In project root
+      rm -rf node_modules package-lock.json
+      rm -rf server/node_modules server/package-lock.json
+      rm -rf client/node_modules client/package-lock.json
+      npm install
+      cd server && npm install
+      cd ../client && npm install
+      ```
 
 ### Error Codes
 
 | Code | Description | Solution |
 |------|-------------|----------|
 | AUTH_001 | Invalid credentials | Check username/password |
-| DB_001 | Database connection failed | Verify database configuration |
-| QR_001 | QR code generation failed | Check encryption settings |
-| CAM_001 | Camera access denied | Grant browser permissions |
+| DB_001 | Database connection failed | Verify database configuration and MySQL is running |
+| QR_001 | QR code generation failed | Check encryption settings in `.env` |
+| CAM_001 | Camera access denied | Grant browser permissions and ensure HTTPS |
+| CERT_001 | Certificate error | Install mkcert root CA with `mkcert -install` |
+| NET_001 | Network unreachable | Check firewall and verify IP address |
+| CORS_001 | CORS policy error | Verify `FRONTEND_URL` in backend `.env` matches frontend URL |
+
+### Getting Help
+
+If issues persist:
+
+1. **Check Console Logs**:
+   - Browser DevTools (F12) → Console tab
+   - Backend terminal output
+   - Look for red error messages
+
+2. **Verify Configuration**:
+   - All `.env` files have correct values
+   - IP addresses match your actual network IP
+   - Certificate files exist and paths are correct
+
+3. **Use Setup Wizard**:
+   - Navigate to `/setup-wizard`
+   - Run connection tests
+   - Download fresh configuration files
+
+4. **Test Endpoints**:
+   ```bash
+   # Test backend health
+   curl -k https://localhost:3001/api/health
+   
+   # Test from mobile (replace IP)
+   curl -k https://192.168.1.100:3001/api/health
+   ```
+
+5. **Check Versions**:
+   ```bash
+   node --version  # Should be 16+
+   npm --version
+   mysql --version # Should be 8.0+
+   mkcert -version
+   ```
 
 ## 📋 Roadmap
 
@@ -300,19 +810,187 @@ npm run test:integration
 - [ ] **Multi-campus Support**: Distributed system architecture
 - [ ] **Integration APIs**: Third-party system connectivity
 
+## 📚 Quick Reference
+
+### Common Commands
+
+```bash
+# Install dependencies
+npm run setup
+
+# Initialize database
+cd server && npm run db:setup
+
+# Start development servers
+npm run dev
+
+# Start individually
+npm run server:dev  # Backend only
+npm run client:dev  # Frontend only
+
+# Run in production
+npm start
+```
+
+### Windows-Specific Commands
+
+```powershell
+# Find your IP address
+ipconfig
+
+# Check if ports are in use
+netstat -ano | findstr :3001
+netstat -ano | findstr :5173
+
+# Kill process on port
+taskkill /PID <PID> /F
+
+# Open firewall ports (PowerShell as Admin)
+New-NetFirewallRule -DisplayName "CampusQR Backend" -Direction Inbound -Protocol TCP -LocalPort 3001 -Action Allow
+New-NetFirewallRule -DisplayName "CampusQR Frontend" -Direction Inbound -Protocol TCP -LocalPort 5173 -Action Allow
+
+# Install mkcert (PowerShell as Admin)
+choco install mkcert
+mkcert -install
+```
+
+### macOS/Linux Commands
+
+```bash
+# Find your IP address
+ifconfig | grep "inet "  # macOS
+ip addr show             # Linux
+
+# Check if ports are in use
+lsof -i :3001
+lsof -i :5173
+
+# Kill process on port
+lsof -ti:3001 | xargs kill -9
+lsof -ti:5173 | xargs kill -9
+
+# Install mkcert
+brew install mkcert      # macOS
+sudo apt install mkcert  # Ubuntu/Debian
+mkcert -install
+```
+
+### HTTPS Certificate Commands
+
+```bash
+# Generate certificates (replace YOUR_IP)
+cd client
+mkcert 192.168.1.100 localhost 127.0.0.1 ::1
+
+# List generated certificates
+ls -la *.pem
+
+# Verify mkcert installation
+mkcert -version
+mkcert -CAROOT  # Show CA root directory
+```
+
+### Database Commands
+
+```bash
+# Connect to MySQL
+mysql -u root -p
+
+# Create database
+CREATE DATABASE campusqr;
+
+# Import schema
+mysql -u root -p campusqr < server/database/schema.sql
+
+# Check database exists
+SHOW DATABASES;
+
+# Show tables
+USE campusqr;
+SHOW TABLES;
+```
+
+### Testing Connections
+
+```bash
+# Test backend health (Linux/macOS)
+curl -k https://localhost:3001/api/health
+
+# Test backend health (Windows PowerShell)
+Invoke-WebRequest -Uri https://localhost:3001/api/health -SkipCertificateCheck
+
+# Test from mobile network
+curl -k https://192.168.1.100:3001/api/health
+```
+
+### File Locations
+
+```
+CampusQR/
+├── server/.env              ← Backend configuration
+├── client/.env              ← Frontend configuration
+├── client/vite.config.js    ← Frontend HTTPS settings
+├── server/index.js          ← Backend HTTPS settings
+├── client/*.pem             ← SSL certificates
+└── server/database/         ← Database schemas
+```
+
+### Environment Variables
+
+**server/.env:**
+```bash
+PORT=3001
+DATABASE_HOST=localhost
+DATABASE_NAME=campusqr
+DATABASE_USER=root
+DATABASE_PASSWORD=your_password
+JWT_SECRET=your_jwt_secret
+ENCRYPTION_KEY=your_encryption_key
+FRONTEND_URL=https://YOUR_IP:5173
+```
+
+**client/.env:**
+```bash
+VITE_API_URL=https://YOUR_IP:3001/api
+```
+
+### Port Reference
+
+| Port | Service | URL |
+|------|---------|-----|
+| 3001 | Backend API | https://YOUR_IP:3001 |
+| 5173 | Frontend App | https://YOUR_IP:5173 |
+| 3306 | MySQL Database | localhost:3306 |
+
+### Useful Links
+
+- **Setup Wizard**: https://YOUR_IP:5173/setup-wizard (No login required)
+- **Admin Login**: https://YOUR_IP:5173
+- **API Health**: https://YOUR_IP:3001/api/health
+- **Database Setup**: [server/database/schema.sql](server/database/schema.sql)
+- **HTTPS Guide**: [SETUP_WIZARD.md](SETUP_WIZARD.md)
+
+### Browser Console Commands
+
+```javascript
+// Check current API URL
+console.log(import.meta.env.VITE_API_URL)
+
+// Test API connection
+fetch('https://YOUR_IP:3001/api/health')
+  .then(r => r.json())
+  .then(console.log)
+
+// Get current location
+window.location.href
+
+// Check local storage token
+localStorage.getItem('token')
+```
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👥 Support
-
-For support and questions:
-
-1. 📧 Email: support@campusqr.com
-2. 💬 Discord: [Join our community](https://discord.gg/campusqr)
-3. 🐛 Issues: [GitHub Issues](https://github.com/ronald2117/CampusQR/issues)
-4. 📖 Documentation: [Full Documentation](https://docs.campusqr.com)
-
 ## 🙏 Acknowledgments
 
 - Icons from [Twemoji](https://twemoji.twitter.com/)
@@ -320,8 +998,5 @@ For support and questions:
 - Scanner functionality by [qr-scanner](https://www.npmjs.com/package/qr-scanner)
 - Built with ❤️ for educational institutions worldwide
 
----
-
-**Made with 💻 and ☕ by [ronald2117](https://github.com/ronald2117)**
 
 *Securing campuses, one QR code at a time* 🎓
