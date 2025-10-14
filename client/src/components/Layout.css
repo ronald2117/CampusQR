@@ -94,6 +94,10 @@
   overflow: hidden;
 }
 
+.nav-link:hover {
+  text-decoration: none;
+}
+
 .nav-link::before {
   content: '';
   position: absolute;
@@ -123,9 +127,18 @@
 }
 
 .nav-icon {
-  font-size: 1.25rem;
-  min-width: 24px;
-  text-align: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 /* User Section */
@@ -165,19 +178,21 @@
   flex: 1;
 }
 
-.user-name {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: white !important;
+.user-details .user-name {
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  line-height: 1.4 !important;
 }
 
-.user-role {
-  margin: 0;
-  font-size: 0.75rem;
-  color: #94a3b8;
-  font-weight: 500;
-  text-transform: capitalize;
+.user-details .user-role {
+  margin: 0 !important;
+  font-size: 0.75rem !important;
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+  text-transform: capitalize !important;
+  line-height: 1.4 !important;
 }
 
 .logout-button {
@@ -202,6 +217,11 @@
   border-color: #ef4444;
   color: #fecaca;
   transform: translateY(-1px);
+}
+
+.logout-icon {
+  width: 18px;
+  height: 18px;
 }
 
 /* Mobile Overlay */
