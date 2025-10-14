@@ -106,13 +106,24 @@ const Scanner = () => {
     try {
       setError('')
       setResult(null)
+      setLoading(false)
       
       // Stop existing scanner if running
       if (qrScanner) {
-        qrScanner.stop()
-        qrScanner.destroy()
+        try {
+          qrScanner.stop()
+          qrScanner.destroy()
+        } catch (e) {
+          console.warn('Error cleaning up existing scanner:', e)
+        }
         setQrScanner(null)
       }
+      
+      // Ensure scanning state is reset
+      setScanning(false)
+      
+      // Small delay to ensure camera is fully released
+      await new Promise(resolve => setTimeout(resolve, 100))
 
       // Mobile-specific configuration
       const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
@@ -177,8 +188,12 @@ const Scanner = () => {
 
   const stopScanning = () => {
     if (qrScanner) {
-      qrScanner.stop()
-      qrScanner.destroy()
+      try {
+        qrScanner.stop()
+        qrScanner.destroy()
+      } catch (error) {
+        console.warn('Error stopping scanner:', error)
+      }
       setQrScanner(null)
     }
     setScanning(false)
@@ -291,7 +306,22 @@ const Scanner = () => {
   const startNewScan = () => {
     clearResult()
     if (!manualMode) {
-      startScanning()
+      // Ensure scanner is completely stopped before restarting
+      if (qrScanner) {
+        try {
+          qrScanner.stop()
+          qrScanner.destroy()
+        } catch (e) {
+          console.warn('Error cleaning up scanner:', e)
+        }
+        setQrScanner(null)
+      }
+      setScanning(false)
+      
+      // Small delay to ensure camera is fully released
+      setTimeout(() => {
+        startScanning()
+      }, 300)
     }
   }
 
