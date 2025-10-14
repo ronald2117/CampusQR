@@ -87,7 +87,7 @@ router.post('/verify', auth, async (req, res) => {
           course: student.course,
           year_level: student.year_level,
           enrollment_status: student.enrollment_status,
-          photo_url: student.photo_url
+          photo_url: student.photo_url ? `${req.protocol}://${req.get('host')}${student.photo_url}` : null
         },
         accessGranted: true,
         timestamp: new Date().toISOString(),
@@ -159,7 +159,10 @@ router.post('/manual-verify', auth, async (req, res) => {
       success: true,
       message: 'Manual verification completed',
       data: {
-        student,
+        student: {
+          ...student,
+          photo_url: student.photo_url ? `${req.protocol}://${req.get('host')}${student.photo_url}` : null
+        },
         accessGranted: true,
         verificationType: 'manual',
         reason,
@@ -243,11 +246,17 @@ router.get('/logs', auth, async (req, res) => {
     const totalLogs = countResult[0].total;
     const totalPages = Math.ceil(totalLogs / limit);
 
+    // Transform photo URLs to full URLs
+    const logsWithFullPhotoUrls = logs.map(log => ({
+      ...log,
+      photo_url: log.photo_url ? `${req.protocol}://${req.get('host')}${log.photo_url}` : null
+    }));
+
     res.json({
       success: true,
       message: 'Access logs retrieved successfully',
       data: {
-        logs,
+        logs: logsWithFullPhotoUrls,
         pagination: {
           currentPage: page,
           totalPages,
