@@ -92,7 +92,6 @@ const Login = () => {
             >
               {loading ? (
                 <>
-                  <div className="spinner"></div>
                   Signing in...
                 </>
               ) : (
