@@ -157,8 +157,8 @@ const startServer = async () => {
     }
     
     // Check for HTTPS certificates
-    const certPath = path.join(__dirname, '../client/10.154.13.206+2.pem');
-    const keyPath = path.join(__dirname, '../client/10.154.13.206+2-key.pem');
+    const certPath = path.join(__dirname, '../client/localhost+2.pem');
+    const keyPath = path.join(__dirname, '../client/localhost+2-key.pem');
     
     const useHttps = fs.existsSync(certPath) && fs.existsSync(keyPath);
     
