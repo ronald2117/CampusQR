@@ -52,9 +52,49 @@ export const AuthProvider = ({ children }) => {
       return { success: false, message: response.message }
     } catch (error) {
       console.error('Login failed:', error)
+      
+      // Provide detailed error messages
+      if (error.code === 'ECONNABORTED' || error.message === 'timeout of 10000ms exceeded') {
+        return { 
+          success: false, 
+          message: 'Connection timeout - Server is not responding'
+        }
+      }
+      
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        return { 
+          success: false, 
+          message: 'Network Error - Unable to connect to server'
+        }
+      }
+      
+      const statusCode = error.response?.status
+      const serverMessage = error.response?.data?.message
+      
+      if (statusCode === 401) {
+        return { 
+          success: false, 
+          message: serverMessage || 'Invalid credentials'
+        }
+      }
+      
+      if (statusCode === 400) {
+        return { 
+          success: false, 
+          message: serverMessage || 'Email and password are required'
+        }
+      }
+      
+      if (statusCode === 500) {
+        return { 
+          success: false, 
+          message: 'Internal server error'
+        }
+      }
+      
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Login failed' 
+        message: serverMessage || 'Login failed - Please try again'
       }
     }
   }

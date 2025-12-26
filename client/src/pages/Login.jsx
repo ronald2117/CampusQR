@@ -19,10 +19,31 @@ const Login = () => {
     setLoading(true)
     setError('')
 
-    const result = await login(formData.email, formData.password)
-    
-    if (!result.success) {
-      setError(result.message)
+    try {
+      const result = await login(formData.email, formData.password)
+      
+      if (!result.success) {
+        // Show detailed error message in alert
+        let errorMessage = 'Login failed'
+        
+        if (result.message === 'Invalid credentials') {
+          errorMessage = '❌ Login Failed\n\nIncorrect email or password. Please check your credentials and try again.'
+        } else if (result.message === 'Email and password are required') {
+          errorMessage = '❌ Missing Information\n\nPlease enter both email and password.'
+        } else if (result.message === 'Internal server error') {
+          errorMessage = '❌ Server Error\n\nThe server encountered an error. Please try again later or contact support.'
+        } else if (result.message.includes('Network Error') || result.message.includes('timeout')) {
+          errorMessage = '❌ Connection Error\n\nUnable to connect to the server. Please check your internet connection and try again.'
+        } else {
+          errorMessage = `❌ Login Failed\n\n${result.message}`
+        }
+        
+        alert(errorMessage)
+        setError(result.message)
+      }
+    } catch (error) {
+      alert('❌ Unexpected Error\n\nAn unexpected error occurred. Please try again.')
+      setError('An unexpected error occurred')
     }
     
     setLoading(false)

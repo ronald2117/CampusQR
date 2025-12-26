@@ -106,22 +106,6 @@ const Students = () => {
 
   return (
     <div className="students-container">
-      {/* Header */}
-      <div className="students-header">
-        <div className="students-header-content">
-          <h2>Students Management</h2>
-          <p>Manage student records and generate QR codes</p>
-        </div>
-        {isAdmin && (
-          <button onClick={handleAdd} className="add-student-btn">
-            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Add Student
-          </button>
-        )}
-      </div>
-
       {/* Search and Filters */}
       <div className="search-card">
         <div className="search-card-body">
@@ -135,16 +119,14 @@ const Students = () => {
                 onChange={handleSearch}
               />
             </div>
-            <button 
-              onClick={fetchStudents} 
-              className="refresh-btn"
-              disabled={loading}
-            >
-              <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
+            {isAdmin && (
+              <button onClick={handleAdd} className="add-student-btn">
+                <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Student
+              </button>
+            )}
           </div>
         </div>
       </div>
