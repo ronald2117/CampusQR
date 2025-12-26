@@ -34,58 +34,8 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration
-app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, postman)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'https://localhost:5173',
-      'http://localhost:5174',
-      'https://localhost:5174',
-      'http://127.0.0.1:5173',
-      'https://127.0.0.1:5173',
-      'http://127.0.0.1:5174',
-      'https://127.0.0.1:5174',
-      'http://10.86.120.206:5173',
-      'https://10.86.120.206:5173',
-      'http://10.86.120.206:5174',
-      'https://10.86.120.206:5174'
-    ];
-    
-    const allowedPatterns = [
-      /^https?:\/\/192\.168\.\d+\.\d+:(5173|5174)$/,
-      /^https?:\/\/10\.\d+\.\d+\.\d+:(5173|5174)$/,
-      /^https?:\/\/172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+:(5173|5174)$/
-    ];
-    
-    // Check if origin is in allowed list
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    
-    // Check if origin matches any pattern
-    for (const pattern of allowedPatterns) {
-      if (pattern.test(origin)) {
-        return callback(null, true);
-      }
-    }
-    
-    // For development, allow all origins (remove this in production!)
-    console.log('⚠️ Allowing origin:', origin, '(development mode)');
-    return callback(null, true);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600 // Cache preflight for 10 minutes
-}));
-
-// Handle preflight requests explicitly
-app.options('*', cors());
+// CORS disabled for development - allows all origins
+app.use(cors());
 
 // Logging
 app.use(morgan('combined'));

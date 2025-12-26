@@ -354,6 +354,14 @@
   .date-badge {
     display: none;
   }
+
+  .logout-button {
+    margin-bottom: 2.7rem;
+  }
+
+  .user-section {
+    padding-bottom: 2.7rem;
+  }
 }
 
 @media (max-width: 480px) {
