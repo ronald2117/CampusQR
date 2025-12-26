@@ -116,20 +116,6 @@ const AccessLogs = () => {
 
   return (
     <div className="access-logs-container">
-      {/* Header */}
-      <div className="access-logs-header">
-        <div className="access-logs-title-section">
-          <h2>Access Logs</h2>
-          <p>View and filter all access attempts and verifications</p>
-        </div>
-        <button onClick={exportLogs} className="export-btn">
-          <svg className="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Export CSV
-        </button>
-      </div>
-
       {/* Filters */}
       <div className="filter-card">
         <div className="filter-card-header">
@@ -139,6 +125,12 @@ const AccessLogs = () => {
             </svg>
             Filters
           </h3>
+          <button onClick={exportLogs} className="export-btn">
+            <svg className="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export CSV
+          </button>
         </div>
         <div className="filter-card-body">
           <div className="filter-grid">

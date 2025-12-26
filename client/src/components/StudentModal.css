@@ -68,6 +68,7 @@
 .student-modal-title {
   margin: 0;
   font-size: 1.375rem;
+  color: white;
   font-weight: 700;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }

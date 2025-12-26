@@ -327,17 +327,6 @@ const Scanner = () => {
 
   return (
     <div className="scanner-container">
-      {/* Header */}
-      <div className="scanner-header">
-        <h2>
-          QR Code Scanner
-        </h2>
-        <p>
-          Scan student QR codes or perform manual verification
-        </p>
-      </div>
-
-      {/* Location Input */}
       <div className="location-card">
         <div className="location-controls">
           <div className="location-input-group">
