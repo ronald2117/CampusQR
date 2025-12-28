@@ -34,25 +34,31 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration - allow frontend origins
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://localhost:5173',
-  'http://localhost:3000',
-  'https://localhost:3000',
-  'http://192.168.1.16:5173',
-  'https://192.168.1.16:5173'
-];
-
+// CORS configuration - permissive for development
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+    // In development, allow all origins
+    if (process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // In production, use whitelist
+      const allowedOrigins = [
+        'http://localhost:5173',
+        'https://localhost:5173',
+        'http://localhost:3000',
+        'https://localhost:3000',
+        'http://192.168.1.16:5173',
+        'https://192.168.1.16:5173'
+      ];
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
     }
   },
   credentials: true,
@@ -119,24 +125,21 @@ app.use('*', (req, res) => {
   });
 });
 
-// Start server
 const startServer = async () => {
   try {
-    // Test database connection
     const dbConnected = await testConnection();
     if (!dbConnected) {
       console.error('❌ Failed to connect to database. Please check your configuration.');
       process.exit(1);
     }
     
-    // Check for HTTPS certificates
-    const certPath = path.join(__dirname, '../client/localhost+2.pem');
-    const keyPath = path.join(__dirname, '../client/localhost+2-key.pem');
+    // Check for HTTPS certificates - using network IP certificates
+    const certPath = path.join(__dirname, '../client/192.168.1.16+2.pem');
+    const keyPath = path.join(__dirname, '../client/192.168.1.16+2-key.pem');
     
     const useHttps = fs.existsSync(certPath) && fs.existsSync(keyPath);
     
     if (useHttps) {
-      // HTTPS Server
       const httpsOptions = {
         key: fs.readFileSync(keyPath),
         cert: fs.readFileSync(certPath)
@@ -151,7 +154,6 @@ const startServer = async () => {
         console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       });
       
-      // Also start HTTP server for redirects (optional)
       const httpPort = 3000;
       const httpServer = http.createServer((req, res) => {
         res.writeHead(301, { "Location": `https://${req.headers.host.replace(httpPort, PORT)}${req.url}` });
