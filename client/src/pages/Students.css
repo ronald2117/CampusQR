@@ -1,35 +1,6 @@
-/* Students Page Styles - Blue Theme */
 .students-container {
   padding: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-/* Header Section */
-.students-header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding: 1.5rem 0;
-  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-}
-
-.students-header-content h2 {
-  margin: 0;
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #1e293b;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.students-header-content p {
-  margin: 0.5rem 0 0 0;
-  color: #64748b;
-  font-size: 1rem;
-  font-weight: 500;
 }
 
 .add-student-btn {
@@ -61,10 +32,6 @@
   border: 1px solid rgba(59, 130, 246, 0.1);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   margin-bottom: 2rem;
-}
-
-.search-card-body {
-  padding: 1.5rem;
 }
 
 .search-controls {
