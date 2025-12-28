@@ -58,7 +58,6 @@
 /* Header */
 .qr-modal-header {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
   padding: 1.5rem 2rem;
   position: relative;
   border-bottom: 1px solid rgba(59, 130, 246, 0.2);
@@ -67,6 +66,7 @@
 .qr-modal-title {
   margin: 0;
   font-size: 1.375rem;
+  color: white;
   font-weight: 700;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
