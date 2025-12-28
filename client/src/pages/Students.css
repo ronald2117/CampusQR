@@ -427,7 +427,8 @@
     flex-direction: column;
   }
   
-  .students-table {
+  .students-table, 
+  .student-name {
     font-size: 0.8rem;
   }
   
