@@ -19,10 +19,8 @@ const Scanner = () => {
   const [showResultDialog, setShowResultDialog] = useState(false)
 
   useEffect(() => {
-    // Check for camera support and get available cameras
     const initializeCamera = async () => {
       try {
-        // Check if camera is supported
         const hasCamera = await QrScanner.hasCamera()
         console.log('Has camera:', hasCamera)
         
@@ -31,16 +29,13 @@ const Scanner = () => {
           return
         }
 
-        // Request camera permission first, preferring back camera
         try {
-          // Try to request back camera first
           try {
             await navigator.mediaDevices.getUserMedia({ 
               video: { facingMode: 'environment' } 
             })
             console.log('Back camera permission granted')
           } catch (backCamError) {
-            // Fallback to any camera
             await navigator.mediaDevices.getUserMedia({ video: true })
             console.log('Camera permission granted (fallback)')
           }
@@ -50,13 +45,11 @@ const Scanner = () => {
           return
         }
 
-        // List available cameras
         const availableCameras = await QrScanner.listCameras(true)
         console.log('Available cameras:', availableCameras)
         setCameras(availableCameras)
         
         if (availableCameras.length > 0) {
-          // Enhanced back camera detection for mobile scanning
           const backCamera = availableCameras.find(camera => {
             const label = camera.label.toLowerCase()
             return (
@@ -64,14 +57,11 @@ const Scanner = () => {
               label.includes('environment') ||
               label.includes('rear') ||
               label.includes('facing back') ||
-              // Check if facingMode is available and is 'environment'
               (camera.facingMode && camera.facingMode === 'environment')
             )
           })
           
-          // If no back camera found by label, try to find one by device ID patterns
           const fallbackBackCamera = !backCamera ? availableCameras.find(camera => {
-            // Some devices have back cameras with specific ID patterns
             return camera.id && (camera.id.includes('back') || camera.id.includes('1'))
           }) : null
           
@@ -108,7 +98,6 @@ const Scanner = () => {
       setResult(null)
       setLoading(false)
       
-      // Stop existing scanner if running
       if (qrScanner) {
         try {
           qrScanner.stop()
@@ -119,16 +108,12 @@ const Scanner = () => {
         setQrScanner(null)
       }
       
-      // Ensure scanning state is reset
       setScanning(false)
       
-      // Small delay to ensure camera is fully released
       await new Promise(resolve => setTimeout(resolve, 100))
 
-      // Mobile-specific configuration
       const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
       
-      // Find the selected camera info for better constraints
       const selectedCameraInfo = cameras.find(cam => cam.id === selectedCamera)
       const isBackCamera = selectedCameraInfo && (
         selectedCameraInfo.label.toLowerCase().includes('back') || 
@@ -142,23 +127,20 @@ const Scanner = () => {
         {
           highlightScanRegion: true,
           highlightCodeOutline: true,
-          // Use the specific camera ID or fallback to facingMode
           preferredCamera: selectedCamera || (isBackCamera || isMobile ? 'environment' : 'user'),
-          maxScansPerSecond: 2, // Reduce for mobile performance
+          maxScansPerSecond: 2, 
           returnDetailedScanResult: false
         }
       )
 
       console.log('Starting scanner with camera:', selectedCamera, selectedCameraInfo?.label)
-      
-      // Try to set the specific camera
+
       if (selectedCamera) {
         try {
           await scanner.setCamera(selectedCamera)
           console.log('Successfully set camera:', selectedCamera)
         } catch (cameraError) {
           console.warn('Failed to set specific camera, using default constraints:', cameraError)
-          // If setting specific camera fails, try with facingMode constraint
           if (isBackCamera || isMobile) {
             await scanner.setCamera('environment')
           }
@@ -173,7 +155,6 @@ const Scanner = () => {
     } catch (error) {
       console.error('Failed to start camera:', error)
       
-      // More specific error messages
       if (error.name === 'NotAllowedError') {
         setError('Camera permission denied. Please allow camera access in your browser settings.')
       } else if (error.name === 'NotFoundError') {
@@ -205,19 +186,17 @@ const Scanner = () => {
     setSelectedCamera(cameraId)
     
     if (scanning && qrScanner) {
-      // If currently scanning, restart with new camera
       try {
         console.log('Attempting to switch camera while scanning...')
         await qrScanner.setCamera(cameraId)
         console.log('Camera switched successfully to:', selectedCameraInfo?.label || cameraId)
       } catch (error) {
         console.error('Failed to switch camera, restarting scanner:', error)
-        // Fallback: restart scanner with new camera
         stopScanning()
         setTimeout(() => {
           console.log('Restarting scanner with new camera')
           startScanning()
-        }, 1000) // Increased delay for better stability
+        }, 1000) 
       }
     }
   }
@@ -232,7 +211,7 @@ const Scanner = () => {
     console.log('Location:', location);
 
     setLoading(true)
-    setError('') // Clear any previous errors
+    setError('') 
     try {
       console.log('Sending to API...');
       const response = await scannerService.verifyQR(qrData, location)
@@ -242,8 +221,6 @@ const Scanner = () => {
       console.log('Response.data:', response.data);
       console.log('Response.data type:', typeof response.data);
       
-      // The API interceptor returns the whole response body: { success, message, data }
-      // We need the nested data object which contains { student, accessGranted, etc }
       if (response && response.data) {
         console.log('✅ Setting result to response.data:', response.data);
         setResult(response.data)
@@ -306,7 +283,6 @@ const Scanner = () => {
   const startNewScan = () => {
     clearResult()
     if (!manualMode) {
-      // Ensure scanner is completely stopped before restarting
       if (qrScanner) {
         try {
           qrScanner.stop()
@@ -318,7 +294,6 @@ const Scanner = () => {
       }
       setScanning(false)
       
-      // Small delay to ensure camera is fully released
       setTimeout(() => {
         startScanning()
       }, 300)

@@ -1,5 +1,3 @@
-/* Users Page Styles - Modern Blue Theme */
-
 .users-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -18,10 +16,9 @@
   }
 }
 
-/* Header Section */
 .users-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: end;
   align-items: center;
   margin-bottom: 2rem;
   flex-wrap: wrap;
@@ -66,7 +63,6 @@
   height: 20px;
 }
 
-/* Stats Grid */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -134,8 +130,6 @@
   font-weight: 700;
   color: #1e293b;
 }
-
-/* Filter Card */
 .filter-card {
   background: white;
   border-radius: 12px;
@@ -209,7 +203,6 @@
   flex-wrap: wrap;
 }
 
-/* Buttons */
 .btn {
   padding: 0.625rem 1.25rem;
   border-radius: 8px;
@@ -255,7 +248,6 @@
   cursor: not-allowed;
 }
 
-/* Error Alert */
 .error-alert {
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -274,7 +266,6 @@
   flex-shrink: 0;
 }
 
-/* Users Card */
 .users-card {
   background: white;
   border-radius: 12px;
@@ -282,7 +273,6 @@
   overflow: hidden;
 }
 
-/* Users Table */
 .users-table-container {
   overflow-x: auto;
 }
@@ -326,7 +316,6 @@
   font-size: 0.875rem;
 }
 
-/* User Cell */
 .user-cell {
   display: flex;
   align-items: center;
@@ -355,7 +344,6 @@
   color: #1e293b !important;
 }
 
-/* Role Badges */
 .role-badge {
   display: inline-block;
   padding: 0.375rem 0.75rem;
@@ -381,7 +369,6 @@
   color: #475569;
 }
 
-/* Status Badges */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -418,7 +405,6 @@
   background: #dc2626;
 }
 
-/* Action Buttons */
 .action-buttons {
   display: flex;
   gap: 0.5rem;
@@ -463,7 +449,6 @@
   cursor: not-allowed;
 }
 
-/* Pagination */
 .pagination-container {
   display: flex;
   justify-content: space-between;
@@ -525,7 +510,6 @@
   text-align: center;
 }
 
-/* Empty State */
 .empty-state {
   padding: 4rem 2rem;
   text-align: center;
@@ -550,7 +534,6 @@
   color: #64748b;
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -636,7 +619,6 @@
   height: 20px;
 }
 
-/* Form */
 .modal-form {
   padding: 1.5rem;
 }
@@ -707,7 +689,6 @@
   border-top: 1px solid #e2e8f0;
 }
 
-/* Access Denied */
 .access-denied {
   max-width: 500px;
   margin: 4rem auto;
@@ -738,7 +719,6 @@
   font-size: 1rem;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .users-container {
     padding: 1rem;

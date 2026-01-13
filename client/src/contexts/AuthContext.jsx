@@ -53,7 +53,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Login failed:', error)
       
-      // Provide detailed error messages
       if (error.code === 'ECONNABORTED' || error.message === 'timeout of 10000ms exceeded') {
         return { 
           success: false, 

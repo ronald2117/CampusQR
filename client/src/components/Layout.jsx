@@ -85,9 +85,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className="layout-container">
-      {/* Sidebar */}
       <div className={`sidebar ${isMobile ? 'sidebar-mobile' : ''} ${sidebarOpen ? 'open' : ''}`}>
-        {/* Logo */}
         <div className="logo-section">
           <div className="logo-icon">
             <img src={logo} alt="CampusQR Logo" />
@@ -102,7 +100,6 @@ const Layout = ({ children }) => {
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="navigation">
           {filteredNavigation.map((item) => {
             const isActive = location.pathname === item.path
@@ -120,7 +117,6 @@ const Layout = ({ children }) => {
           })}
         </nav>
 
-        {/* User Info */}
         <div className="user-section">
           <div className="user-info">
             <div className="user-avatar">
@@ -147,7 +143,6 @@ const Layout = ({ children }) => {
         </div>
       </div>
 
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && isMobile && (
         <div
           className="mobile-overlay"
@@ -155,12 +150,9 @@ const Layout = ({ children }) => {
         />
       )}
 
-      {/* Main content */}
       <div className="main-content">
-        {/* Header */}
         <header className="header">
           <div className="header-left">
-            {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="mobile-menu-button"
@@ -186,7 +178,6 @@ const Layout = ({ children }) => {
           </div>
         </header>
 
-        {/* Page content */}
         <main className="page-content">
           {children}
         </main>

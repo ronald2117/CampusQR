@@ -55,7 +55,6 @@
   }
 }
 
-/* Header */
 .qr-modal-header {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   padding: 1.5rem 2rem;
@@ -95,7 +94,6 @@
   transform: scale(1.1);
 }
 
-/* Body */
 .qr-modal-body {
   padding: 2rem;
   text-align: center;
@@ -103,7 +101,6 @@
   flex: 1;
 }
 
-/* Student Info Card */
 .student-info-card {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 1px solid rgba(59, 130, 246, 0.1);
@@ -132,7 +129,6 @@
   font-weight: 600;
 }
 
-/* QR Code Container */
 .qr-code-container {
   padding: 2rem;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
@@ -158,7 +154,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Instructions Card */
 .instructions-card {
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border: 1px solid rgba(59, 130, 246, 0.2);
@@ -196,7 +191,6 @@
   margin-bottom: 0;
 }
 
-/* Security Notice */
 .security-notice {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   border: 1px solid rgba(245, 158, 11, 0.3);
@@ -216,7 +210,6 @@
   font-weight: 700;
 }
 
-/* Footer */
 .qr-modal-footer {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-top: 1px solid rgba(59, 130, 246, 0.1);
@@ -224,7 +217,6 @@
   flex-shrink: 0;
 }
 
-/* Button Groups */
 .action-buttons {
   display: flex;
   gap: 0.75rem;
@@ -300,7 +292,6 @@
   transform: translateY(-1px);
 }
 
-/* Icons */
 .icon {
   width: 16px;
   height: 16px;
@@ -308,7 +299,6 @@
   vertical-align: middle;
 }
 
-/* Print Styles */
 @media print {
   .qr-modal-overlay {
     position: static;
@@ -343,7 +333,6 @@
   }
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .qr-modal-overlay {
     align-items: flex-start;

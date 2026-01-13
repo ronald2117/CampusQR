@@ -223,12 +223,7 @@ const Users = () => {
 
   return (
     <div className="users-container">
-      {/* Header */}
       <div className="users-header">
-        <div className="users-title-section">
-          <h2>User Management</h2>
-          <p>Manage system users and permissions</p>
-        </div>
         <button onClick={openCreateModal} className="btn-create">
           <svg className="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -237,7 +232,6 @@ const Users = () => {
         </button>
       </div>
 
-      {/* Stats Cards */}
       {stats && (
         <div className="stats-grid">
           <div className="stat-card">
@@ -278,7 +272,6 @@ const Users = () => {
         </div>
       )}
 
-      {/* Filters */}
       <div className="filter-card">
         <div className="filter-card-header">
           <h3 className="filter-card-title">
@@ -343,7 +336,6 @@ const Users = () => {
         </div>
       )}
 
-      {/* Users Table */}
       <div className="users-card">
         {users.length > 0 ? (
           <>
@@ -419,7 +411,6 @@ const Users = () => {
               </table>
             </div>
 
-            {/* Pagination */}
             {pagination.totalPages > 1 && (
               <div className="pagination-container">
                 <div className="pagination-info">
@@ -496,7 +487,6 @@ const Users = () => {
         )}
       </div>
 
-      {/* Create/Edit Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>

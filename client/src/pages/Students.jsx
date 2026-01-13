@@ -223,7 +223,6 @@ const Students = () => {
               </table>
             </div>
 
-            {/* Pagination */}
             {pagination.totalPages > 1 && (
               <div className="pagination-container">
                 <div className="pagination-info">
@@ -277,7 +276,6 @@ const Students = () => {
         )}
       </div>
 
-      {/* Modals */}
       {showModal && (
         <StudentModal
           student={selectedStudent}
