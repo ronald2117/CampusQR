@@ -43,6 +43,7 @@ CampusQR/
 │   ├── 📂 scripts/           # Database setup scripts
 │   ├── 📂 utils/             # Utility functions
 │   └── 📄 package.jsonconfigurationconfiguration
+├── 📄 campusqr_db.sql        # MySQL database export file
 └── 📄 setup.sh              # Automated setup script
 ```
 
@@ -138,10 +139,20 @@ setup.bat
    ```
 
 3. **Initialize Database**
+   
+   **Option A: Using the setup script (creates fresh database)**
    ```bash
    cd server
    npm run db:setup
    ```
+   
+   **Option B: Import from SQL dump (includes sample data)**
+   ```bash
+   # Import the provided database dump
+   mysql -u root -p campusqr < campusqr_db.sql
+   ```
+   
+   > 📦 **Note**: A complete database export file (`campusqr_db.sql`) is included in the repository for easy setup and deployment.
 
 4. **Configure HTTPS** (See detailed instructions below)
 
