@@ -54,7 +54,6 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Overview Cards */}
       <div className="overview-grid">
         <div className="stat-card">
           <div className="stat-icon total-students">

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
@@ -7,10 +7,16 @@ import Students from './pages/Students'
 import Scanner from './pages/Scanner'
 import AccessLogs from './pages/AccessLogs'
 import Users from './pages/Users'
+import SetupWizard from './pages/SetupWizard'
 import LoadingSpinner from './components/LoadingSpinner'
 
 function App() {
   const { user, loading } = useAuth()
+  const location = useLocation()
+
+  if (location.pathname === '/setup-wizard') {
+    return <SetupWizard />
+  }
 
   if (loading) {
     return <LoadingSpinner />

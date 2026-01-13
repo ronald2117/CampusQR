@@ -17,6 +17,7 @@ const studentRoutes = require('./routes/students');
 const scanRoutes = require('./routes/scan');
 const dashboardRoutes = require('./routes/dashboard');
 const userRoutes = require('./routes/users');
+const setupRoutes = require('./routes/setup');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -82,6 +83,7 @@ app.use('/api/students', studentRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/setup', setupRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
