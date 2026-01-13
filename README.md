@@ -42,9 +42,7 @@ CampusQR/
 │   ├── 📂 routes/            # API route definitions
 │   ├── 📂 scripts/           # Database setup scripts
 │   ├── 📂 utils/             # Utility functions
-│   └── 📄 package.json
-├── 📄 docker-compose.yml     # Docker deployment configuration
-├── 📄 Dockerfile             # Container configuration
+│   └── 📄 package.jsonconfigurationconfiguration
 └── 📄 setup.sh              # Automated setup script
 ```
 
