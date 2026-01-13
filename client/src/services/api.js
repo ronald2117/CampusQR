@@ -2,13 +2,11 @@ import axios from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
-// Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
 })
 
-// Add token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {
@@ -17,7 +15,6 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Handle response errors
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
@@ -29,14 +26,12 @@ api.interceptors.response.use(
   }
 )
 
-// Auth services
 export const authService = {
   login: (email, password) => api.post('/auth/login', { email, password }),
   verifyToken: () => api.get('/auth/verify'),
   logout: () => api.post('/auth/logout')
 }
 
-// Student services
 export const studentService = {
   getAll: (params) => api.get('/students', { params }),
   getById: (id) => api.get(`/students/${id}`),
@@ -50,7 +45,6 @@ export const studentService = {
   generateQR: (id) => api.get(`/students/${id}/qr`)
 }
 
-// Scanner services
 export const scannerService = {
   verifyQR: (qrData, location) => api.post('/scan/verify', { qrData, location }),
   manualVerify: (studentId, location, reason) => 
@@ -58,13 +52,11 @@ export const scannerService = {
   getLogs: (params) => api.get('/scan/logs', { params })
 }
 
-// Dashboard services
 export const dashboardService = {
   getStats: () => api.get('/dashboard/stats'),
   getHealth: () => api.get('/dashboard/health')
 }
 
-// User management services
 export const userService = {
   getAll: (params) => api.get('/users', { params }),
   getById: (id) => api.get(`/users/${id}`),

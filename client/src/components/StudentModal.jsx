@@ -33,7 +33,6 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
       
       setFormData(prev => ({ ...prev, photo: file }))
       
-      // Create preview
       const reader = new FileReader()
       reader.onload = (e) => {
         setPreviewUrl(e.target.result)
@@ -48,7 +47,6 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
     setError('')
 
     try {
-      // Create FormData object for file upload
       const submitData = new FormData()
       
       Object.keys(formData).forEach(key => {

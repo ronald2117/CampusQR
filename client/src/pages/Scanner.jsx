@@ -338,7 +338,6 @@ const Scanner = () => {
 
       <div className="scanner-grid">
         {!manualMode ? (
-          /* QR Scanner Mode */
           <div className="scanner-card">
             <div className="scanner-card-header">
               <h3 className="scanner-card-title">
@@ -493,7 +492,6 @@ const Scanner = () => {
             </div>
           </div>
         ) : (
-          /* Manual Verification Mode */
           <div className="scanner-card">
             <div className="scanner-card-header">
               <h3 className="scanner-card-title">

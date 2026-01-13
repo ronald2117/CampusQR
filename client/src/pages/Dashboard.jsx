@@ -226,7 +226,6 @@ const Dashboard = () => {
                         const startAngle = currentAngle
                         currentAngle += angle
                         
-                        // Calculate path for pie slice
                         const startX = 50 + 50 * Math.cos((Math.PI * startAngle) / 180)
                         const startY = 50 + 50 * Math.sin((Math.PI * startAngle) / 180)
                         const endX = 50 + 50 * Math.cos((Math.PI * (startAngle + angle)) / 180)

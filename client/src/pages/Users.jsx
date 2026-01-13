@@ -28,7 +28,6 @@ const Users = () => {
   const [stats, setStats] = useState(null)
 
   useEffect(() => {
-    // Check if user is admin
     if (currentUser?.role !== 'admin') {
       setError('Access denied. Admin privileges required.')
       setLoading(false)
@@ -48,7 +47,6 @@ const Users = () => {
         ...filters
       }
 
-      // Remove empty filters
       Object.keys(params).forEach(key => {
         if (params[key] === '') {
           delete params[key]
@@ -148,7 +146,6 @@ const Users = () => {
 
     try {
       if (modalMode === 'create') {
-        // Validate password for new user
         if (!formData.password || formData.password.length < 6) {
           setError('Password must be at least 6 characters')
           return
@@ -161,7 +158,6 @@ const Users = () => {
           closeModal()
         }
       } else {
-        // For edit, password is optional
         const updateData = { ...formData }
         if (!updateData.password) {
           delete updateData.password // Don't send empty password

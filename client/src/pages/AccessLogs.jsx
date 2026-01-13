@@ -29,7 +29,6 @@ const AccessLogs = () => {
         ...filters
       }
       
-      // Remove empty filters
       Object.keys(params).forEach(key => {
         if (params[key] === '') {
           delete params[key]
@@ -70,7 +69,6 @@ const AccessLogs = () => {
   }
 
   const exportLogs = () => {
-    // Create CSV content
     const headers = [
       'Date/Time',
       'Student ID',
@@ -98,7 +96,6 @@ const AccessLogs = () => {
       ].map(field => `"${field}"`).join(','))
     ].join('\n')
 
-    // Download CSV
     const blob = new Blob([csvContent], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')

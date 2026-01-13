@@ -23,7 +23,6 @@ const Login = () => {
       const result = await login(formData.email, formData.password)
       
       if (!result.success) {
-        // Show detailed error message in alert
         let errorMessage = 'Login failed'
         
         if (result.message === 'Invalid credentials') {
