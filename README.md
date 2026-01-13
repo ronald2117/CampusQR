@@ -78,6 +78,7 @@ npm run dev
 
 The Setup Wizard will:
 - ✅ Auto-detect your network IP address
+- ✅ Configure and initialize MySQL database (with option to import from SQL dump)
 - ✅ Provide platform-specific installation commands (Windows/macOS/Linux)
 - ✅ Generate SSL certificates for HTTPS
 - ✅ Create pre-configured environment files

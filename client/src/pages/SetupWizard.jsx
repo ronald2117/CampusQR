@@ -12,6 +12,15 @@ const SetupWizard = () => {
     backend: null,
     https: null
   })
+  const [dbConfig, setDbConfig] = useState({
+    host: 'localhost',
+    port: '3306',
+    user: 'root',
+    password: '',
+    database: 'campusqr'
+  })
+  const [dbStatus, setDbStatus] = useState(null)
+  const [dbSetupMethod, setDbSetupMethod] = useState('script') // 'script' or 'import'
 
   useEffect(() => {
     detectOS()
@@ -225,6 +234,52 @@ sudo firewall-cmd --reload`
       .catch(() => alert('Failed to copy. Please copy manually.'))
   }
 
+  const testDatabaseConnection = async () => {
+    try {
+      const response = await fetch(window.location.origin + '/api/setup/test-db', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dbConfig)
+      })
+      const data = await response.json()
+      setDbStatus(data.success ? 'success' : 'error')
+      return data
+    } catch (error) {
+      setDbStatus('error')
+      return { success: false, message: error.message }
+    }
+  }
+
+  const setupDatabase = async () => {
+    try {
+      setDbStatus('loading')
+      const response = await fetch(window.location.origin + '/api/setup/init-db', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...dbConfig,
+          method: dbSetupMethod
+        })
+      })
+      const data = await response.json()
+      setDbStatus(data.success ? 'success' : 'error')
+      if (data.success) {
+        alert('Database setup completed successfully!')
+      } else {
+        alert('Database setup failed: ' + data.message)
+      }
+      return data
+    } catch (error) {
+      setDbStatus('error')
+      alert('Database setup failed: ' + error.message)
+      return { success: false, message: error.message }
+    }
+  }
+
   const steps = [
     {
       number: 1,
@@ -233,26 +288,31 @@ sudo firewall-cmd --reload`
     },
     {
       number: 2,
+      title: 'Database Setup',
+      description: 'Configure and initialize database'
+    },
+    {
+      number: 3,
       title: 'Install mkcert',
       description: 'Install certificate generation tool'
     },
     {
-      number: 3,
+      number: 4,
       title: 'Generate Certificates',
       description: 'Create SSL certificates for HTTPS'
     },
     {
-      number: 4,
+      number: 5,
       title: 'Configure Environment',
       description: 'Download configuration files'
     },
     {
-      number: 5,
+      number: 6,
       title: 'Firewall Setup',
       description: 'Allow network access'
     },
     {
-      number: 6,
+      number: 7,
       title: 'Test & Finish',
       description: 'Verify everything works'
     }
@@ -376,7 +436,148 @@ sudo firewall-cmd --reload`
 
         {currentStep === 2 && (
           <div className="wizard-step">
-            <h2>Step 2: Install mkcert</h2>
+            <h2>Step 2: Database Setup</h2>
+            <p>Configure your MySQL database connection and initialize the database.</p>
+
+            <div className="config-section">
+              <label>Database Configuration:</label>
+              <div className="db-config-grid">
+                <div className="input-group">
+                  <label htmlFor="db-host">Host:</label>
+                  <input
+                    id="db-host"
+                    type="text"
+                    value={dbConfig.host}
+                    onChange={(e) => setDbConfig({...dbConfig, host: e.target.value})}
+                    className="wizard-input"
+                  />
+                </div>
+                <div className="input-group">
+                  <label htmlFor="db-port">Port:</label>
+                  <input
+                    id="db-port"
+                    type="text"
+                    value={dbConfig.port}
+                    onChange={(e) => setDbConfig({...dbConfig, port: e.target.value})}
+                    className="wizard-input"
+                  />
+                </div>
+                <div className="input-group">
+                  <label htmlFor="db-user">Username:</label>
+                  <input
+                    id="db-user"
+                    type="text"
+                    value={dbConfig.user}
+                    onChange={(e) => setDbConfig({...dbConfig, user: e.target.value})}
+                    className="wizard-input"
+                  />
+                </div>
+                <div className="input-group">
+                  <label htmlFor="db-password">Password:</label>
+                  <input
+                    id="db-password"
+                    type="password"
+                    value={dbConfig.password}
+                    onChange={(e) => setDbConfig({...dbConfig, password: e.target.value})}
+                    className="wizard-input"
+                  />
+                </div>
+                <div className="input-group full-width">
+                  <label htmlFor="db-name">Database Name:</label>
+                  <input
+                    id="db-name"
+                    type="text"
+                    value={dbConfig.database}
+                    onChange={(e) => setDbConfig({...dbConfig, database: e.target.value})}
+                    className="wizard-input"
+                  />
+                </div>
+              </div>
+
+              <div className="action-buttons">
+                <button onClick={testDatabaseConnection} className="btn-test">
+                  Test Connection
+                </button>
+              </div>
+
+              {dbStatus && (
+                <div className={`status-message ${dbStatus}`}>
+                  {dbStatus === 'success' && '✓ Database connection successful!'}
+                  {dbStatus === 'error' && '✗ Database connection failed. Check your credentials.'}
+                  {dbStatus === 'loading' && '⏳ Testing connection...'}
+                </div>
+              )}
+            </div>
+
+            <div className="config-section">
+              <label>Setup Method:</label>
+              <div className="method-options">
+                <div 
+                  className={`method-card ${dbSetupMethod === 'script' ? 'selected' : ''}`}
+                  onClick={() => setDbSetupMethod('script')}
+                >
+                  <input 
+                    type="radio" 
+                    name="setup-method" 
+                    value="script" 
+                    checked={dbSetupMethod === 'script'}
+                    onChange={() => setDbSetupMethod('script')}
+                  />
+                  <div className="method-content">
+                    <h4>🔧 Setup Script</h4>
+                    <p>Create fresh database with sample data</p>
+                    <small>Creates tables, default users, and sample students</small>
+                  </div>
+                </div>
+                <div 
+                  className={`method-card ${dbSetupMethod === 'import' ? 'selected' : ''}`}
+                  onClick={() => setDbSetupMethod('import')}
+                >
+                  <input 
+                    type="radio" 
+                    name="setup-method" 
+                    value="import" 
+                    checked={dbSetupMethod === 'import'}
+                    onChange={() => setDbSetupMethod('import')}
+                  />
+                  <div className="method-content">
+                    <h4>📦 Import SQL Dump</h4>
+                    <p>Import from campusqr_db.sql file</p>
+                    <small>Restores complete database with existing data</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="action-buttons">
+              <button onClick={setupDatabase} className="btn-primary" disabled={dbStatus === 'loading'}>
+                {dbStatus === 'loading' ? 'Setting up...' : 'Initialize Database'}
+              </button>
+            </div>
+
+            <div className="alert alert-info">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <strong>Note:</strong> Make sure MySQL server is running before proceeding.
+                <br />
+                <strong>Default Credentials:</strong> Admin: admin@campusqr.com / admin123
+              </div>
+            </div>
+
+            <div className="command-box">
+              <div className="command-header">
+                <strong>Manual Setup (Alternative):</strong>
+              </div>
+              <pre>cd server{'\n'}npm run db:setup{'\n\n'}# Or import SQL dump:{'\n'}mysql -u {dbConfig.user} -p {dbConfig.database} &lt; campusqr_db.sql</pre>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 3 && (
+          <div className="wizard-step">
+            <h2>Step 3: Install mkcert</h2>
             <p>mkcert is a tool to generate locally-trusted SSL certificates. This is required for HTTPS on mobile devices.</p>
 
             <div className="command-box">
@@ -409,9 +610,9 @@ sudo firewall-cmd --reload`
           </div>
         )}
 
-        {currentStep === 3 && (
+        {currentStep === 4 && (
           <div className="wizard-step">
-            <h2>Step 3: Generate SSL Certificates</h2>
+            <h2>Step 4: Generate SSL Certificates</h2>
             <p>Generate SSL certificates for your IP address to enable HTTPS.</p>
 
             <div className="config-section">
@@ -443,9 +644,9 @@ sudo firewall-cmd --reload`
           </div>
         )}
 
-        {currentStep === 4 && (
+        {currentStep === 5 && (
           <div className="wizard-step">
-            <h2>Step 4: Download Configuration Files</h2>
+            <h2>Step 5: Download Configuration Files</h2>
             <p>Download these pre-configured files and place them in the correct locations.</p>
 
             <div className="download-grid">
@@ -500,9 +701,9 @@ sudo firewall-cmd --reload`
           </div>
         )}
 
-        {currentStep === 5 && (
+        {currentStep === 6 && (
           <div className="wizard-step">
-            <h2>Step 5: Configure Firewall</h2>
+            <h2>Step 6: Configure Firewall</h2>
             <p>Allow incoming connections on ports 3001 (backend) and 5173 (frontend).</p>
 
             <div className="command-box">
@@ -531,9 +732,9 @@ sudo firewall-cmd --reload`
           </div>
         )}
 
-        {currentStep === 6 && (
+        {currentStep === 7 && (
           <div className="wizard-step">
-            <h2>Step 6: Test & Finish</h2>
+            <h2>Step 7: Test & Finish</h2>
             <p>Let's verify that everything is configured correctly.</p>
 
             <div className="test-section">
@@ -621,9 +822,9 @@ sudo firewall-cmd --reload`
             Previous
           </button>
 
-          {currentStep < 6 ? (
+          {currentStep < 7 ? (
             <button
-              onClick={() => setCurrentStep(Math.min(6, currentStep + 1))}
+              onClick={() => setCurrentStep(Math.min(7, currentStep + 1))}
               className="nav-btn next"
             >
               Next
