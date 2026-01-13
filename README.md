@@ -4,7 +4,7 @@ A comprehensive QR code-based student verification system for campus security an
 
 ## ✨ Features
 
-- 🔐 **Secure QR Code Generation**: Unique encrypted QR codes for each student with 24-hour expiry
+- 🔐 **Secure QR Code Generation**: Unique encrypted QR codes for each student
 - 📱 **Real-time Scanning**: Mobile-friendly camera-based scanning interface
 - 👥 **Student Management**: Full CRUD operations with photo uploads and status tracking
 - 📊 **Admin Dashboard**: Real-time analytics, statistics, and system monitoring
@@ -57,7 +57,37 @@ CampusQR/
 - Modern web browser with camera support
 - **mkcert** (for HTTPS - required for mobile camera access)
 
-### Option 1: Automated Setup (Linux/macOS/Git Bash)
+### Option 1: Setup Wizard (Recommended - All Platforms)
+
+The easiest way to get started! Our interactive Setup Wizard guides you through the entire configuration process:
+
+```bash
+# Clone and install dependencies
+git clone <your-repo-url>
+cd CampusQR
+npm install
+cd server && npm install
+cd ../client && npm install
+
+# Start the frontend
+cd client
+npm run dev
+
+# Visit the Setup Wizard (no login required)
+# Open browser: https://localhost:5173/setup-wizard
+```
+
+The Setup Wizard will:
+- ✅ Auto-detect your network IP address
+- ✅ Provide platform-specific installation commands (Windows/macOS/Linux)
+- ✅ Generate SSL certificates for HTTPS
+- ✅ Create pre-configured environment files
+- ✅ Set up firewall rules
+- ✅ Test your connections
+
+All with copy-paste commands and downloadable configuration files!
+
+### Option 2: Automated Setup Scripts (Linux/macOS/Git Bash)
 
 ```bash
 # Clone the repository
@@ -69,7 +99,7 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
-### Option 2: Automated Setup (Windows PowerShell)
+### Option 3: Automated Setup (Windows PowerShell)
 
 ```powershell
 # Clone the repository
@@ -80,7 +110,7 @@ cd CampusQR
 .\setup.ps1
 ```
 
-### Option 3: Automated Setup (Windows Command Prompt)
+### Option 4: Automated Setup (Windows Command Prompt)
 
 ```batch
 REM Clone the repository
@@ -91,7 +121,7 @@ REM Run batch setup script
 setup.bat
 ```
 
-### Option 4: Manual Setup
+### Option 5: Manual Setup
 
 1. **Install Dependencies**
    ```bash
@@ -518,7 +548,181 @@ Replace `localhost` with your computer's IP address:
 
 > ⚠️ **Security Notice**: Change default passwords before production deployment!
 
-## 📖 User Guide
+## � How It Works
+
+### System Overview
+
+CampusQR is a comprehensive student verification system that uses QR codes for secure access control. The system consists of three main components:
+
+#### 1. **Backend Server (Node.js + Express)**
+- Handles authentication and authorization
+- Manages student database with MySQL
+- Generates encrypted QR codes for students
+- Processes verification requests from scanners
+- Logs all access attempts for audit trails
+- Serves RESTful API endpoints
+
+#### 2. **Frontend Application (React + Vite)**
+- Admin dashboard for system monitoring
+- Student management interface with photo uploads
+- QR code scanner with camera integration
+- Access log viewer with filtering and export
+- User management for admins and security personnel
+- Responsive design for desktop and mobile
+
+#### 3. **Database (MySQL)**
+- Stores student records (ID, name, photo, course, year level)
+- Maintains user accounts with role-based permissions
+- Logs every access attempt with timestamps
+- Tracks system statistics and metrics
+
+### The QR Code Verification Flow
+
+```
+1. Admin creates/updates student record
+   ↓
+2. System generates encrypted QR code with student data
+   - Includes: Student ID, name, photo URL, enrollment status
+   - Encrypted with AES-256 encryption
+   - Remains valid as long as student is active
+   ↓
+3. Student presents QR code at checkpoint
+   ↓
+4. Security personnel scans QR code with camera
+   ↓
+5. System decrypts and validates QR code:
+   - Verifies student exists in database
+   - Confirms student is active
+   - Validates enrollment status
+   ↓
+6. System displays result:
+   ✅ ACCESS GRANTED - Shows student details
+   ❌ ACCESS DENIED - Shows reason (inactive, not found)
+   ↓
+7. Access attempt logged with:
+   - Student information
+   - Timestamp
+   - Location (if provided)
+   - Grant/deny decision
+   - Reason for denial (if applicable)
+```
+
+### Security Features
+
+1. **Encrypted QR Codes**
+   - All student data in QR codes is encrypted using AES-256
+   - Encryption key stored securely on server
+   - Cannot be forged or tampered with
+   - QR codes remain valid while student is active
+
+2. **JWT Authentication**
+   - All API requests require valid JWT token
+   - Tokens expire after configured period
+   - Role-based access control (Admin vs Security)
+
+4. **HTTPS Required**
+   - All communications encrypted with SSL/TLS
+   - Camera access requires HTTPS on mobile devices
+   - Prevents man-in-the-middle attacks
+
+5. **Rate Limiting**
+   - Protects against brute force attacks
+   - Limits requests per IP address
+   - Prevents API abuse
+
+6. **Comprehensive Logging**
+   - Every access attempt recorded
+   - Audit trail for security reviews
+   - Exportable reports for analysis
+
+### Mobile Access
+
+The system is designed for mobile-first usage:
+
+- **Security Personnel**: Use mobile devices to scan QR codes at checkpoints
+- **Administrators**: Manage system from desktop or mobile
+- **Students**: View their QR codes (if student portal implemented)
+
+Mobile access requires:
+- HTTPS connection (camera permission requirement)
+- Same WiFi network as server (for local development)
+- Modern browser with camera support (Chrome/Safari recommended)
+
+### Typical Usage Scenarios
+
+#### Scenario 1: Daily Campus Entry
+1. Student arrives at campus gate
+2. Student opens their QR code
+3. Security guard scans code with mobile device
+4. System verifies student is enrolled and active
+5. Gate opens, student enters campus
+6. Access logged in system
+
+#### Scenario 2: Event Check-in
+1. Admin creates list of eligible students for event
+2. Students present QR codes at event entrance
+3. Security scans codes to verify eligibility
+4. System tracks attendance automatically
+5. Reports generated for attendance records
+
+#### Scenario 3: Library Access
+1. Student wants to enter library
+2. Presents QR code at library entrance
+3. System verifies active enrollment status
+4. Access granted or denied based on status
+5. Time-stamped entry logged
+
+#### Scenario 4: Emergency Manual Override
+1. QR code scanner not working
+2. Security uses Manual Verification feature
+3. Enters Student ID manually
+4. Provides reason for manual verification
+5. System validates and logs manual entry
+
+### System Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   Client Browser                     │
+│  (React App - Admin Dashboard, Scanner, Reports)    │
+└─────────────────┬───────────────────────────────────┘
+                  │ HTTPS (TLS/SSL)
+                  │ REST API Calls
+                  │ JWT Authentication
+                  ↓
+┌─────────────────────────────────────────────────────┐
+│              Express.js Backend Server               │
+│  ┌─────────────────────────────────────────────┐   │
+│  │  API Routes (Auth, Students, Scan, etc.)    │   │
+│  └─────────────────┬───────────────────────────┘   │
+│  ┌─────────────────┴───────────────────────────┐   │
+│  │     Middleware (Auth, Rate Limit, CORS)     │   │
+│  └─────────────────┬───────────────────────────┘   │
+│  ┌─────────────────┴───────────────────────────┐   │
+│  │  Business Logic (QR Gen, Encryption, etc.)  │   │
+│  └─────────────────┬───────────────────────────┘   │
+└────────────────────┼─────────────────────────────────┘
+                     │ SQL Queries
+                     │ Connection Pool
+                     ↓
+┌─────────────────────────────────────────────────────┐
+│                  MySQL Database                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────┐ │
+│  │   students   │  │    users     │  │  access  │ │
+│  │   table      │  │    table     │  │   logs   │ │
+│  └──────────────┘  └──────────────┘  └──────────┘ │
+└─────────────────────────────────────────────────────┘
+```
+
+### Performance Considerations
+
+- **Database Indexing**: Optimized queries with indexes on frequently searched fields
+- **Image Compression**: Student photos compressed to reduce storage and bandwidth
+- **Connection Pooling**: Efficient database connection management
+- **Lazy Loading**: Components loaded on-demand for faster initial page load
+- **Caching**: Frequently accessed data cached to reduce database queries
+
+## �📖 User Guide
 
 ### For Administrators
 
@@ -581,7 +785,6 @@ GET /api/dashboard/health     # System health check
 ## 🛡️ Security Features
 
 - **Encrypted QR Codes**: All QR codes contain encrypted student data
-- **Time-based Expiry**: QR codes automatically expire after 24 hours
 - **Rate Limiting**: API protection against abuse
 - **Input Validation**: Comprehensive data validation and sanitization
 - **Secure Headers**: Helmet.js for security headers
