@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import './Landing.css'
+import logo from '../../public/qr-logo.svg'
 
 function Landing() {
   const navigate = useNavigate()
@@ -10,15 +11,7 @@ function Landing() {
       <nav className="navbar">
         <div className="nav-container">
           <div className="nav-logo">
-            <svg className="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <rect x="10" y="10" width="35" height="35" fill="currentColor" />
-              <rect x="55" y="10" width="35" height="35" fill="currentColor" />
-              <rect x="10" y="55" width="35" height="35" fill="currentColor" />
-              <rect x="65" y="65" width="15" height="15" fill="currentColor" />
-              <rect x="20" y="20" width="15" height="15" fill="#fff" />
-              <rect x="65" y="20" width="15" height="15" fill="#fff" />
-              <rect x="20" y="65" width="15" height="15" fill="#fff" />
-            </svg>
+            <img src={logo} alt="CampusQR Logo" className="logo-icon" />
             <span className="logo-text">CampusQR</span>
           </div>
           <button className="nav-button" onClick={() => navigate('/login')}>
@@ -36,7 +29,7 @@ function Landing() {
               <span className="hero-gradient"> Made Simple</span>
             </h1>
             <p className="hero-description">
-              Streamline your campus security with modern QR code technology. 
+              Streamline your campus security with modern QR code technology.
               Track attendance, manage students, and monitor access in real-time.
             </p>
             <div className="hero-buttons">
@@ -93,7 +86,7 @@ function Landing() {
               Powerful features to manage your campus access control system
             </p>
           </div>
-          
+
           <div className="features-grid">
             <div className="feature">
               <div className="feature-icon-wrapper">
@@ -188,15 +181,7 @@ function Landing() {
         <div className="footer-container">
           <div className="footer-content">
             <div className="footer-brand">
-              <svg className="footer-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <rect x="10" y="10" width="35" height="35" fill="currentColor" />
-                <rect x="55" y="10" width="35" height="35" fill="currentColor" />
-                <rect x="10" y="55" width="35" height="35" fill="currentColor" />
-                <rect x="65" y="65" width="15" height="15" fill="currentColor" />
-                <rect x="20" y="20" width="15" height="15" fill="#fff" />
-                <rect x="65" y="20" width="15" height="15" fill="#fff" />
-                <rect x="20" y="65" width="15" height="15" fill="#fff" />
-              </svg>
+              <img src={logo} alt="CampusQR Logo" className="footer-logo" />
               <span className="footer-text">CampusQR</span>
             </div>
             <p className="footer-copyright">
