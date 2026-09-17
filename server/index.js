@@ -37,24 +37,14 @@ app.use(limiter);
 // CORS configuration - permissive for development
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
-    // In development, allow all origins
     if (process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
-      // In production, use whitelist
       const allowedOrigins = [
         'https://campusqr-client.onrender.com',
-        'http://localhost:5173',
-        'https://localhost:5173',
-        'http://localhost:3000',
-        'https://localhost:3000',
-        'http://192.168.1.16:5173',
-        'https://192.168.1.16:5173'
+        'http://localhost:5173'
       ];
-      
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
@@ -66,6 +56,9 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(limiter);
 
 // Logging
 app.use(morgan('combined'));
