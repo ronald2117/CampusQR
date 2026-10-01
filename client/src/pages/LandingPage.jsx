@@ -202,7 +202,7 @@ const LandingPage = () => {
       <nav className={`lp-nav ${navScrolled ? 'scrolled' : ''}`}>
         <div className="lp-nav-inner">
           <a className="lp-nav-brand" href="#hero">
-            <img src={logo} alt="CampusQR logo" />
+            {/* <img src={logo} alt="CampusQR logo" /> */}
             <span>CampusQR</span>
           </a>
 
