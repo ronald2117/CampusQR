@@ -99,19 +99,35 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
 
             {/* Photo Upload */}
             <div className="photo-upload-section">
-              <div className="photo-preview">
-                {previewUrl ? (
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                  />
-                ) : (
-                  <svg className="photo-placeholder" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              <div className="photo-preview-wrapper">
+                <div className="photo-preview">
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      onError={(e) => { e.target.onerror = null; setPreviewUrl(null) }}
+                    />
+                  ) : (
+                    <div className="photo-placeholder-inner">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="32" height="32">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span>No photo</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Camera overlay on hover */}
+                <label htmlFor="photo" className="photo-overlay" title="Change photo">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                )}
+                </label>
               </div>
-              
+
               <input
                 type="file"
                 accept="image/*"
@@ -119,16 +135,16 @@ const StudentModal = ({ student, onSubmit, onClose }) => {
                 id="photo"
                 style={{ display: 'none' }}
               />
-              <label htmlFor="photo" className="upload-btn">
-                <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Upload Photo
-              </label>
-              <p className="upload-help-text">
-                Optional. Max 5MB. JPG, PNG, or GIF.
-              </p>
+              <div className="upload-info">
+                <label htmlFor="photo" className="upload-btn">
+                  <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  {previewUrl ? 'Change Photo' : 'Upload Photo'}
+                </label>
+                <p className="upload-help-text">Optional · Max 5 MB · JPG, PNG, GIF</p>
+              </div>
             </div>
 
             <div className="form-grid">

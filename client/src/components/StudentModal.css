@@ -112,28 +112,34 @@
 
 /* Photo Upload Section */
 .photo-upload-section {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
   margin-bottom: 2rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f0f4ff 100%);
+  border-radius: 14px;
+  border: 1px solid rgba(59, 130, 246, 0.12);
+}
+
+/* Wrapper provides the hover target for the overlay */
+.photo-preview-wrapper {
+  position: relative;
+  flex-shrink: 0;
 }
 
 .photo-preview {
-  width: 120px;
-  height: 120px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1rem;
   overflow: hidden;
-  border: 3px dashed rgba(59, 130, 246, 0.3);
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.photo-preview:hover {
-  border-color: rgba(59, 130, 246, 0.5);
-  transform: scale(1.05);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
 }
 
 .photo-preview img {
@@ -142,10 +148,48 @@
   object-fit: cover;
 }
 
-.photo-placeholder {
-  width: 48px;
-  height: 48px;
+.photo-placeholder-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
   color: #94a3b8;
+}
+
+.photo-placeholder-inner span {
+  font-size: 0.65rem;
+  font-weight: 500;
+}
+
+/* Camera icon overlay — appears on hover */
+.photo-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  backdrop-filter: blur(2px);
+}
+
+.photo-preview-wrapper:hover .photo-overlay {
+  opacity: 1;
+}
+
+.photo-preview-wrapper:hover .photo-preview {
+  box-shadow: 0 6px 24px rgba(37, 99, 235, 0.25);
+}
+
+/* Text/button side */
+.upload-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
 .upload-btn {
@@ -162,6 +206,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  width: fit-content;
 }
 
 .upload-btn:hover {
@@ -170,9 +215,10 @@
 }
 
 .upload-help-text {
-  font-size: 0.875rem;
-  color: #64748b;
-  margin: 0.5rem 0 0;
+  font-size: 0.775rem;
+  color: #94a3b8;
+  margin: 0;
+
   font-weight: 500;
 }
 

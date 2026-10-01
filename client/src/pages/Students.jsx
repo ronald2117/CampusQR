@@ -151,6 +151,7 @@ const Students = () => {
               <table className="students-table">
                 <thead>
                   <tr>
+                    <th>Photo</th>
                     <th>Student ID</th>
                     <th>Name</th>
                     <th>Email</th>
@@ -163,15 +164,33 @@ const Students = () => {
                 <tbody>
                   {students.map((student) => (
                     <tr key={student.id}>
+                      {/* Photo avatar */}
+                      <td>
+                        {student.photo_url ? (
+                          <img
+                            src={student.photo_url}
+                            alt={student.name}
+                            className="student-avatar-img"
+                            onError={(e) => {
+                              e.target.style.display = 'none'
+                              e.target.nextSibling.style.display = 'flex'
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className="student-avatar"
+                          style={{ display: student.photo_url ? 'none' : 'flex' }}
+                        >
+                          {student.name?.charAt(0).toUpperCase() || '?'}
+                        </div>
+                      </td>
                       <td>
                         <span className="student-id">{student.student_id}</span>
                       </td>
                       <td>
-                        <div>
-                          <div className="student-name">{student.name}</div>
-                          <div className="student-created">
-                            Added {new Date(student.created_at).toLocaleDateString()}
-                          </div>
+                        <div className="student-name">{student.name}</div>
+                        <div className="student-created">
+                          Added {new Date(student.created_at).toLocaleDateString()}
                         </div>
                       </td>
                       <td className="student-course">{student.email}</td>

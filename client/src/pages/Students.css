@@ -154,6 +154,18 @@
   font-size: 1rem;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.8);
+  flex-shrink: 0;
+}
+
+.student-avatar-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  display: block;
+  flex-shrink: 0;
 }
 
 /* Student Info */
