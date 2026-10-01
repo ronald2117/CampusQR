@@ -19,6 +19,11 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus()
   }, [])
 
+  const clearSession = () => {
+    localStorage.removeItem('token')
+    setUser(null)
+  }
+
   const checkAuthStatus = async () => {
     try {
       const token = localStorage.getItem('token')
@@ -31,11 +36,13 @@ export const AuthProvider = ({ children }) => {
       if (response.success) {
         setUser(response.data.user)
       } else {
-        localStorage.removeItem('token')
+        clearSession()
       }
     } catch (error) {
-      console.error('Auth check failed:', error)
-      localStorage.removeItem('token')
+      // Token is expired or the server is unreachable — clear silently.
+      // Do NOT rethrow; we always want loading to become false.
+      console.warn('Session check failed, clearing token:', error.message)
+      clearSession()
     } finally {
       setLoading(false)
     }
@@ -99,8 +106,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = () => {
-    localStorage.removeItem('token')
-    setUser(null)
+    clearSession()
   }
 
   const value = {

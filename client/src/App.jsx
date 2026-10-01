@@ -15,30 +15,34 @@ function App() {
   const { user, loading } = useAuth()
   const location = useLocation()
 
+  // Always let the setup wizard through without any auth check
   if (location.pathname === '/setup-wizard') {
     return <SetupWizard />
   }
 
-  // Public landing page — always accessible at /
-  if (location.pathname === '/') {
-    if (user) {
-      return <Navigate to="/dashboard" replace />
-    }
-    return <LandingPage />
-  }
-
-  // Login page — accessible without auth
-  if (location.pathname === '/login') {
-    if (user) {
-      return <Navigate to="/dashboard" replace />
-    }
-    return <Login />
-  }
-
+  // Block ALL routes until the token-verify request finishes.
+  // Without this, the public-route early returns below could fire
+  // before checkAuthStatus() resolves, causing a flash or wrong redirect.
   if (loading) {
     return <LoadingSpinner />
   }
 
+  // ── Public landing page ──────────────────────────────────
+  if (location.pathname === '/') {
+    if (user) return <Navigate to="/dashboard" replace />
+    return <LandingPage />
+  }
+
+  // ── Login page ───────────────────────────────────────────
+  if (location.pathname === '/login') {
+    if (user) return <Navigate to="/dashboard" replace />
+    return <Login />
+  }
+
+  // ── Protected routes ─────────────────────────────────────
+  // Session expired or not logged in → send home (landing page).
+  // Using '/' instead of '/login' avoids the black "Not found"
+  // screen that appears when the server/SPA doesn't handle /login directly.
   if (!user) {
     return <Navigate to="/" replace />
   }
@@ -47,10 +51,11 @@ function App() {
     <Layout>
       <Routes>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/students" element={<Students />} />
-        <Route path="/scanner" element={<Scanner />} />
-        <Route path="/logs" element={<AccessLogs />} />
-        <Route path="/users" element={<Users />} />
+        <Route path="/students"  element={<Students />} />
+        <Route path="/scanner"   element={<Scanner />} />
+        <Route path="/logs"      element={<AccessLogs />} />
+        <Route path="/users"     element={<Users />} />
+        {/* Any unknown path → dashboard when logged in */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Layout>

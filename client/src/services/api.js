@@ -20,7 +20,10 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      // Use replace() so the browser doesn't keep the broken page in history.
+      // Navigate to '/' (landing/home) instead of '/login' to avoid
+      // hitting a route the dev/prod server doesn't recognise (black "Not found").
+      window.location.replace('/')
     }
     throw error
   }
