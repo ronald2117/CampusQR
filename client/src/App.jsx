@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import LandingPage from './pages/LandingPage'
 import Dashboard from './pages/Dashboard'
 import Students from './pages/Students'
 import Scanner from './pages/Scanner'
@@ -18,18 +19,33 @@ function App() {
     return <SetupWizard />
   }
 
+  // Public landing page — always accessible at /
+  if (location.pathname === '/') {
+    if (user) {
+      return <Navigate to="/dashboard" replace />
+    }
+    return <LandingPage />
+  }
+
+  // Login page — accessible without auth
+  if (location.pathname === '/login') {
+    if (user) {
+      return <Navigate to="/dashboard" replace />
+    }
+    return <Login />
+  }
+
   if (loading) {
     return <LoadingSpinner />
   }
 
   if (!user) {
-    return <Login />
+    return <Navigate to="/" replace />
   }
 
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/students" element={<Students />} />
         <Route path="/scanner" element={<Scanner />} />

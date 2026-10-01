@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import './Login.css'
 import logo from '../../public/qr-logo.svg'
@@ -155,6 +156,11 @@ const Login = () => {
             </div>
           </div>
         </div>
+      </div>
+      <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
+        <Link to="/" style={{ fontSize: '0.875rem', color: '#64748b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
+          ← Back to Home
+        </Link>
       </div>
     </div>
   )
