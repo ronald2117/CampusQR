@@ -58,6 +58,7 @@ const Login = () => {
 
   return (
     <div className="login-container">
+      <div className="login-bg-grid" aria-hidden="true" />
       <div className="login-card">
         <div className="login-card-body">
           <div className="login-header">
@@ -157,8 +158,8 @@ const Login = () => {
           </div>
         </div>
       </div>
-      <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
-        <Link to="/" style={{ fontSize: '0.875rem', color: '#64748b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
+      <div className="login-back-link" style={{ textAlign: 'center' }}>
+        <Link to="/">
           ← Back to Home
         </Link>
       </div>
