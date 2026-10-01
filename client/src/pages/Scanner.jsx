@@ -5,20 +5,26 @@ import './Scanner.css';
 
 const Scanner = () => {
   const videoRef = useRef(null)
+  const physicalInputRef = useRef(null)
   const [qrScanner, setQrScanner] = useState(null)
   const [scanning, setScanning] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [location, setLocation] = useState('')
-  const [manualMode, setManualMode] = useState(false)
+  const [scanMode, setScanMode] = useState('camera') // 'camera' | 'physical' | 'manual'
   const [manualStudentId, setManualStudentId] = useState('')
   const [manualReason, setManualReason] = useState('')
   const [cameras, setCameras] = useState([])
   const [selectedCamera, setSelectedCamera] = useState('')
   const [loading, setLoading] = useState(false)
   const [showResultDialog, setShowResultDialog] = useState(false)
+  const [physicalScannerInput, setPhysicalScannerInput] = useState('')
+  const [physicalScannerReady, setPhysicalScannerReady] = useState(false)
+  const [lastScanTime, setLastScanTime] = useState(null)
 
   useEffect(() => {
+    if (scanMode !== 'camera') return
+
     const initializeCamera = async () => {
       try {
         const hasCamera = await QrScanner.hasCamera()
@@ -88,7 +94,31 @@ const Scanner = () => {
         qrScanner.destroy()
       }
     }
-  }, [qrScanner])
+  }, [qrScanner, scanMode])
+
+  // Auto-focus physical scanner input when mode is active
+  useEffect(() => {
+    if (scanMode === 'physical' && physicalInputRef.current) {
+      physicalInputRef.current.focus()
+      setPhysicalScannerReady(true)
+    } else {
+      setPhysicalScannerReady(false)
+    }
+  }, [scanMode, showResultDialog])
+
+  // Keep physical scanner input focused
+  useEffect(() => {
+    if (scanMode !== 'physical' || showResultDialog) return
+
+    const keepFocus = () => {
+      if (physicalInputRef.current && document.activeElement !== physicalInputRef.current) {
+        physicalInputRef.current.focus()
+      }
+    }
+
+    const intervalId = setInterval(keepFocus, 500)
+    return () => clearInterval(intervalId)
+  }, [scanMode, showResultDialog])
 
   const startScanning = async () => {
     if (!videoRef.current) return
@@ -282,7 +312,7 @@ const Scanner = () => {
 
   const startNewScan = () => {
     clearResult()
-    if (!manualMode) {
+    if (scanMode === 'camera') {
       if (qrScanner) {
         try {
           qrScanner.stop()
@@ -297,7 +327,39 @@ const Scanner = () => {
       setTimeout(() => {
         startScanning()
       }, 300)
+    } else if (scanMode === 'physical') {
+      setPhysicalScannerInput('')
+      setTimeout(() => {
+        if (physicalInputRef.current) {
+          physicalInputRef.current.focus()
+        }
+      }, 100)
     }
+  }
+
+  const handlePhysicalScanKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      const scannedData = physicalScannerInput.trim()
+      if (scannedData && !loading) {
+        console.log('Physical scanner input received:', scannedData)
+        setLastScanTime(new Date())
+        handleScanResult(scannedData)
+        setPhysicalScannerInput('')
+      }
+    }
+  }
+
+  const handleScanModeChange = (mode) => {
+    // Clean up camera scanner when leaving camera mode
+    if (scanMode === 'camera' && mode !== 'camera') {
+      stopScanning()
+    }
+    setScanMode(mode)
+    setError('')
+    setResult(null)
+    setShowResultDialog(false)
+    setPhysicalScannerInput('')
   }
 
   return (
@@ -320,24 +382,41 @@ const Scanner = () => {
               placeholder="e.g., Main Gate, Library Entrance, Dormitory"
             />
           </div>
+        </div>
+        <div className="mode-selector">
           <button
-            onClick={() => setManualMode(!manualMode)}
-            className={`mode-toggle-btn ${manualMode ? 'active' : ''}`}
+            onClick={() => handleScanModeChange('camera')}
+            className={`mode-selector-btn ${scanMode === 'camera' ? 'active' : ''}`}
           >
             <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {manualMode ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              )}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            {manualMode ? 'QR Mode' : 'Manual Mode'}
+            Camera
+          </button>
+          <button
+            onClick={() => handleScanModeChange('physical')}
+            className={`mode-selector-btn ${scanMode === 'physical' ? 'active' : ''}`}
+          >
+            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+            Physical Scanner
+          </button>
+          <button
+            onClick={() => handleScanModeChange('manual')}
+            className={`mode-selector-btn ${scanMode === 'manual' ? 'active' : ''}`}
+          >
+            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Manual Entry
           </button>
         </div>
       </div>
 
       <div className="scanner-grid">
-        {!manualMode ? (
+        {scanMode === 'camera' ? (
           <div className="scanner-card">
             <div className="scanner-card-header">
               <h3 className="scanner-card-title">
@@ -487,6 +566,89 @@ const Scanner = () => {
                       Use Manual Mode
                     </button>
                   </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : scanMode === 'physical' ? (
+          <div className="scanner-card">
+            <div className="scanner-card-header">
+              <h3 className="scanner-card-title">
+                <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+                Physical QR Scanner
+              </h3>
+              <p className="scanner-card-subtitle">
+                Use a USB or Bluetooth barcode/QR scanner device
+              </p>
+            </div>
+            <div className="scanner-card-body">
+              <div className="physical-scanner-area">
+                <div className={`physical-scanner-status ${physicalScannerReady ? 'ready' : ''}`}>
+                  <div className="physical-scanner-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                    <div className={`status-pulse ${physicalScannerReady && !loading ? 'active' : ''}`} />
+                  </div>
+                  <h4 className="physical-scanner-status-text">
+                    {loading ? 'Verifying...' : physicalScannerReady ? 'Ready to Scan' : 'Initializing...'}
+                  </h4>
+                  <p className="physical-scanner-hint">
+                    {loading ? 'Processing the scanned QR code' : 'Point your physical scanner at a student\'s QR code. The scan will be processed automatically.'}
+                  </p>
+                </div>
+
+                <div className="physical-scanner-input-wrapper">
+                  <input
+                    ref={physicalInputRef}
+                    type="text"
+                    className="physical-scanner-input"
+                    value={physicalScannerInput}
+                    onChange={(e) => setPhysicalScannerInput(e.target.value)}
+                    onKeyDown={handlePhysicalScanKeyDown}
+                    placeholder="Scanner input will appear here..."
+                    disabled={loading}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                  />
+                  <div className="physical-scanner-input-hint">
+                    <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    This field captures input from your physical scanner. You can also paste or type a QR code value and press Enter.
+                  </div>
+                </div>
+
+                {loading && (
+                  <div className="physical-scanner-loading">
+                    <div className="spinner" style={{ width: '24px', height: '24px' }} />
+                    <span>Verifying QR Code...</span>
+                  </div>
+                )}
+
+                {lastScanTime && !loading && !showResultDialog && (
+                  <div className="physical-scanner-last-scan">
+                    <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Last scan: {lastScanTime.toLocaleTimeString()}
+                  </div>
+                )}
+              </div>
+
+              {error && !showResultDialog && (
+                <div className="scanner-alert scanner-alert-error" style={{ marginTop: '1rem' }}>
+                  <h4>
+                    <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Scan Error
+                  </h4>
+                  <p>{error}</p>
                 </div>
               )}
             </div>

@@ -107,32 +107,44 @@
   transform: translateY(-1px);
 }
 
-.mode-toggle-btn {
+/* Mode Selector */
+.mode-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 0.375rem;
+}
+
+.mode-selector-btn {
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1rem;
   background: transparent;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  color: #374151;
-  font-size: 0.875rem;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   white-space: nowrap;
 }
 
-.mode-toggle-btn:hover {
-  border-color: #3b82f6;
+.mode-selector-btn:hover {
   color: #3b82f6;
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.5);
 }
 
-.mode-toggle-btn.active {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  border-color: transparent;
+.mode-selector-btn.active {
+  background: white;
+  color: #1d4ed8;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.15);
 }
 
 /* Scanner Container */
@@ -722,6 +734,181 @@
   transform: translateY(-1px);
 }
 
+/* Physical Scanner */
+.physical-scanner-area {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.physical-scanner-status {
+  text-align: center;
+  padding: 2.5rem 2rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px dashed #cbd5e1;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.physical-scanner-status.ready {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-style: solid;
+}
+
+.physical-scanner-icon {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.physical-scanner-icon svg {
+  width: 56px;
+  height: 56px;
+  color: #94a3b8;
+  transition: color 0.3s ease;
+}
+
+.physical-scanner-status.ready .physical-scanner-icon svg {
+  color: #3b82f6;
+}
+
+.status-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid transparent;
+  pointer-events: none;
+}
+
+.status-pulse.active {
+  border-color: rgba(59, 130, 246, 0.4);
+  animation: pulseRing 2s ease-out infinite;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.6);
+    opacity: 0;
+  }
+}
+
+.physical-scanner-status-text {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #475569;
+  transition: color 0.3s ease;
+}
+
+.physical-scanner-status.ready .physical-scanner-status-text {
+  color: #1d4ed8;
+}
+
+.physical-scanner-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.physical-scanner-input-wrapper {
+  margin-bottom: 1rem;
+}
+
+.physical-scanner-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  background: #ffffff;
+  color: #1e293b;
+  transition: all 0.2s ease;
+  letter-spacing: 0.025em;
+}
+
+.physical-scanner-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.physical-scanner-input:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.physical-scanner-input::placeholder {
+  color: #94a3b8;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: normal;
+}
+
+.physical-scanner-input-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  margin-top: 0.625rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.physical-scanner-input-hint .icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.physical-scanner-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1d4ed8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.physical-scanner-last-scan {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-top: 1rem;
+}
+
 /* Icons */
 .icon {
   width: 20px;
@@ -742,8 +929,11 @@
     align-items: stretch;
   }
   
-  .mode-toggle-btn {
-    width: 100%;
+  .mode-selector {
+    flex-direction: column;
+  }
+
+  .mode-selector-btn {
     justify-content: center;
   }
   
@@ -796,5 +986,19 @@
 
   .student-info-card {
     padding: 1.25rem;
+  }
+
+  .physical-scanner-status {
+    padding: 1.5rem 1rem;
+  }
+
+  .physical-scanner-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .physical-scanner-icon svg {
+    width: 40px;
+    height: 40px;
   }
 }
