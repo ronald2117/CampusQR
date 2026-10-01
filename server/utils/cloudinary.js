@@ -1,8 +1,8 @@
 const { v2: cloudinary } = require('cloudinary');
+const logger = require('./logger');
 
 /**
  * Lazily configure Cloudinary the first time it's used.
- * This ensures dotenv has been loaded by the time we read env vars.
  * Also validates that credentials are actually present.
  */
 let configured = false;
@@ -17,12 +17,32 @@ const ensureConfigured = () => {
   if (!cloudName || !apiKey || !apiSecret) {
     throw new Error(
       'Cloudinary credentials missing. Set CLOUDINARY_CLOUD_NAME, ' +
-      'CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your environment.'
+      'CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your Render environment.'
     );
   }
 
   cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret, secure: true });
   configured = true;
+};
+
+/**
+ * Call this at server startup to log Cloudinary config status.
+ * Does NOT throw — only logs a warning if credentials are missing.
+ */
+const checkCloudinaryConfig = () => {
+  const ok = !!(process.env.CLOUDINARY_CLOUD_NAME &&
+                process.env.CLOUDINARY_API_KEY    &&
+                process.env.CLOUDINARY_API_SECRET);
+  if (ok) {
+    logger.info('✅ Cloudinary configured', { cloud: process.env.CLOUDINARY_CLOUD_NAME });
+  } else {
+    logger.warn(
+      '⚠️  Cloudinary credentials NOT set — photo uploads will be skipped. ' +
+      'Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET ' +
+      'to your Render environment variables.'
+    );
+  }
+  return ok;
 };
 
 /**
@@ -65,8 +85,8 @@ const deleteFromCloudinary = async (publicId) => {
     ensureConfigured();
     await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
   } catch (err) {
-    console.warn(`[Cloudinary] Could not delete asset "${publicId}":`, err.message);
+    logger.warn('Cloudinary delete failed', { publicId, error: err.message });
   }
 };
 
-module.exports = { uploadToCloudinary, deleteFromCloudinary };
+module.exports = { uploadToCloudinary, deleteFromCloudinary, checkCloudinaryConfig };

@@ -142,8 +142,8 @@
 
 /* Avatar Section */
 .student-avatar {
-  width: 44px;
-  height: 44px;
+  width: 33px;
+  height: 33px;
   border-radius: 50%;
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   display: flex;
@@ -176,7 +176,8 @@
 }
 
 .student-name {
-  font-weight: 600;
+  font-weight: 200;
+  font-size: 0.875rem;
   color: #1e293b;
   margin-bottom: 0.25rem;
 }

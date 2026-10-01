@@ -11,6 +11,7 @@ require('dotenv').config();
 const logger             = require('./utils/logger');
 const { testConnection } = require('./config/database');
 const { runStartupMigrations } = require('./migrations/startup');
+const { checkCloudinaryConfig } = require('./utils/cloudinary');
 
 // Import routes
 const authRoutes      = require('./routes/auth');
@@ -176,6 +177,9 @@ const startServer = async () => {
 
     // Auto-apply any pending schema migrations
     await runStartupMigrations();
+
+    // Log whether Cloudinary photo uploads are available
+    checkCloudinaryConfig();
 
     const isProduction = process.env.NODE_ENV === 'production';
 

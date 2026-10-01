@@ -170,7 +170,7 @@ const Students = () => {
                           <img
                             src={student.photo_url}
                             alt={student.name}
-                            className="student-avatar-img"
+                            className="student-avatar"
                             onError={(e) => {
                               e.target.style.display = 'none'
                               e.target.nextSibling.style.display = 'flex'
