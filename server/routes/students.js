@@ -1,10 +1,11 @@
-const express = require('express');
-const QRCode = require('qrcode');
-const multer = require('multer');
-const { pool } = require('../config/database');
-const { auth, adminAuth } = require('../middleware/auth');
-const { generateStudentQRData } = require('../utils/encryption');
+const express  = require('express');
+const QRCode   = require('qrcode');
+const multer   = require('multer');
+const { pool }                            = require('../config/database');
+const { auth, adminAuth }                 = require('../middleware/auth');
+const { generateStudentQRData }           = require('../utils/encryption');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
+const logger                              = require('../utils/logger');
 
 const router = express.Router();
 
@@ -78,7 +79,7 @@ router.get('/', auth, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get students error:', error);
+    logger.error('Get students error', { error: error.message, stack: error.stack });
     res.status(500).json({ success: false, message: 'Failed to retrieve students' });
   }
 });
@@ -99,7 +100,7 @@ router.get('/:id', auth, async (req, res) => {
 
     res.json({ success: true, message: 'Student retrieved successfully', data: students[0] });
   } catch (error) {
-    console.error('Get student error:', error);
+    logger.error('Get student error', { id: req.params.id, error: error.message });
     res.status(500).json({ success: false, message: 'Failed to retrieve student' });
   }
 });
@@ -128,15 +129,24 @@ router.post('/', adminAuth, upload.single('photo'), async (req, res) => {
     }
 
     // Upload photo to Cloudinary (if provided)
-    let photo_url        = null;
-    let photo_public_id  = null;
+    let photo_url       = null;
+    let photo_public_id = null;
 
     if (req.file) {
-      const result     = await uploadToCloudinary(req.file.buffer, {
-        public_id: `student_${student_id}_${Date.now()}`,
-      });
-      photo_url        = result.secure_url;
-      photo_public_id  = result.public_id;
+      try {
+        const result    = await uploadToCloudinary(req.file.buffer, {
+          public_id: `student_${student_id}_${Date.now()}`,
+        });
+        photo_url       = result.secure_url;
+        photo_public_id = result.public_id;
+        logger.info('Photo uploaded to Cloudinary', { student_id, public_id: photo_public_id });
+      } catch (uploadErr) {
+        // Don't crash the whole create — log the issue and continue without a photo
+        logger.error('Cloudinary upload failed on create', {
+          student_id,
+          error: uploadErr.message,
+        });
+      }
     }
 
     const [insertResult] = await pool.query(
@@ -153,13 +163,15 @@ router.post('/', adminAuth, upload.single('photo'), async (req, res) => {
       [insertResult.insertId]
     );
 
+    logger.info('Student created', { id: insertResult.insertId, student_id });
+
     res.status(201).json({
       success: true,
       message: 'Student created successfully',
       data: newStudent[0],
     });
   } catch (error) {
-    console.error('Create student error:', error);
+    logger.error('Create student error', { error: error.message, stack: error.stack });
     res.status(500).json({ success: false, message: 'Failed to create student' });
   }
 });
@@ -194,15 +206,21 @@ router.put('/:id', adminAuth, upload.single('photo'), async (req, res) => {
     let photo_public_id = existing[0].photo_public_id;
 
     if (req.file) {
-      // Delete old Cloudinary asset (safe — handles null/missing gracefully)
-      await deleteFromCloudinary(existing[0].photo_public_id);
-
-      // Upload new photo
-      const result  = await uploadToCloudinary(req.file.buffer, {
-        public_id: `student_${student_id}_${Date.now()}`,
-      });
-      photo_url       = result.secure_url;
-      photo_public_id = result.public_id;
+      try {
+        await deleteFromCloudinary(existing[0].photo_public_id);
+        const result    = await uploadToCloudinary(req.file.buffer, {
+          public_id: `student_${student_id}_${Date.now()}`,
+        });
+        photo_url       = result.secure_url;
+        photo_public_id = result.public_id;
+        logger.info('Photo replaced on Cloudinary', { id, public_id: photo_public_id });
+      } catch (uploadErr) {
+        logger.error('Cloudinary upload failed on update', {
+          id,
+          error: uploadErr.message,
+        });
+        // Keep the existing photo if the upload fails
+      }
     }
 
     await pool.query(
@@ -220,13 +238,15 @@ router.put('/:id', adminAuth, upload.single('photo'), async (req, res) => {
       [id]
     );
 
+    logger.info('Student updated', { id });
+
     res.json({
       success: true,
       message: 'Student updated successfully',
       data: updatedStudent[0],
     });
   } catch (error) {
-    console.error('Update student error:', error);
+    logger.error('Update student error', { id: req.params.id, error: error.message, stack: error.stack });
     res.status(500).json({ success: false, message: 'Failed to update student' });
   }
 });
@@ -246,7 +266,6 @@ router.delete('/:id', adminAuth, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
 
-    // Remove Cloudinary asset before soft-deleting the record
     await deleteFromCloudinary(existing[0].photo_public_id);
 
     await pool.query(
@@ -254,9 +273,10 @@ router.delete('/:id', adminAuth, async (req, res) => {
       [id]
     );
 
+    logger.info('Student deleted', { id });
     res.json({ success: true, message: 'Student deleted successfully' });
   } catch (error) {
-    console.error('Delete student error:', error);
+    logger.error('Delete student error', { id: req.params.id, error: error.message, stack: error.stack });
     res.status(500).json({ success: false, message: 'Failed to delete student' });
   }
 });
@@ -301,7 +321,7 @@ router.get('/:id/qr', auth, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('QR code generation error:', error);
+    logger.error('QR generation error', { id: req.params.id, error: error.message });
     res.status(500).json({ success: false, message: 'Failed to generate QR code' });
   }
 });

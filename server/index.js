@@ -1,183 +1,191 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
+const express  = require('express');
+const cors     = require('cors');
+const helmet   = require('helmet');
 const rateLimit = require('express-rate-limit');
-const morgan = require('morgan');
-const path = require('path');
-const https = require('https');
-const http = require('http');
-const fs = require('fs');
+const morgan   = require('morgan');
+const path     = require('path');
+const https    = require('https');
+const http     = require('http');
+const fs       = require('fs');
 require('dotenv').config();
 
+const logger          = require('./utils/logger');
 const { testConnection } = require('./config/database');
+const { runStartupMigrations } = require('./migrations/startup');
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const studentRoutes = require('./routes/students');
-const scanRoutes = require('./routes/scan');
+const authRoutes      = require('./routes/auth');
+const studentRoutes   = require('./routes/students');
+const scanRoutes      = require('./routes/scan');
 const dashboardRoutes = require('./routes/dashboard');
-const userRoutes = require('./routes/users');
+const userRoutes      = require('./routes/users');
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 3001;
 
-// Security middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+// ── 1. CORS — must come BEFORE helmet so headers aren't overwritten ──────────
+const allowedOrigins = [
+  'https://campusqr-client.onrender.com',
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow server-to-server / curl (no Origin header)
+    if (!origin) return callback(null, true);
+
+    if (process.env.NODE_ENV !== 'production') {
+      // Dev: allow everything
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    logger.warn('CORS blocked request', { origin });
+    callback(new Error(`CORS: origin '${origin}' not allowed`));
+  },
+  credentials:    true,
+  methods:        ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  // Explicitly handle pre-flight for every route
+  optionsSuccessStatus: 200,
 }));
 
-// Rate limiting
+// Respond to all OPTIONS pre-flight requests immediately
+app.options('*', cors());
+
+// ── 2. Security headers (after CORS so it doesn't strip CORS headers) ───────
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  // Don't set CORP for API responses — the CORS middleware already handles it
+  crossOriginEmbedderPolicy: false,
+}));
+
+// ── 3. Rate limiting ─────────────────────────────────────────────────────────
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  windowMs: 15 * 60 * 1000, // 15 min
+  max:      200,             // raised slightly for photo uploads
+  message: { success: false, message: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders:   false,
 });
 app.use(limiter);
 
-// CORS configuration - permissive for development
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (process.env.NODE_ENV !== 'production') {
-      callback(null, true);
-    } else {
-      const allowedOrigins = [
-        'https://campusqr-client.onrender.com',
-        'http://localhost:5173'
-      ];
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// ── 4. HTTP request logging via Morgan → Winston ─────────────────────────────
+app.use(morgan('combined', { stream: logger.stream }));
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-app.use(limiter);
-
-// Logging
-app.use(morgan('combined'));
-
-// Body parsing middleware
+// ── 5. Body parsing ──────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static files for uploads
+// ── 6. Static files (local dev only — Cloudinary handles uploads in prod) ───
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/students', studentRoutes);
-app.use('/api/scan', scanRoutes);
+// ── 7. API routes ─────────────────────────────────────────────────────────────
+app.use('/api/auth',      authRoutes);
+app.use('/api/students',  studentRoutes);
+app.use('/api/scan',      scanRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/users',     userRoutes);
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+// ── 8. Health check ───────────────────────────────────────────────────────────
+app.get('/api/health', (_req, res) => {
+  res.json({
+    status:    'OK',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version:   '1.0.0',
+    env:       process.env.NODE_ENV || 'development',
   });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  
+// ── 9. Global error handler ───────────────────────────────────────────────────
+app.use((err, req, res, _next) => {
+  const status  = err.status || 500;
+  const message = err.message || 'Internal Server Error';
+
+  logger.error('Unhandled error', {
+    status,
+    message,
+    method: req.method,
+    path:   req.path,
+    stack:  err.stack,
+    ip:     req.ip,
+  });
+
   if (err.name === 'ValidationError') {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation Error',
-      errors: err.errors
-    });
+    return res.status(400).json({ success: false, message: 'Validation Error', errors: err.errors });
   }
-  
-  if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid token'
-    });
+  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
-  
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error'
-  });
+  if (err.message?.includes('CORS')) {
+    return res.status(403).json({ success: false, message: err.message });
+  }
+
+  res.status(status).json({ success: false, message });
 });
 
-// 404 handler
+// ── 10. 404 catch-all ─────────────────────────────────────────────────────────
 app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
+  logger.warn('Route not found', { method: req.method, path: req.originalUrl, ip: req.ip });
+  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
+// ── Server startup ─────────────────────────────────────────────────────────────
 const startServer = async () => {
   try {
+    // Verify DB
     const dbConnected = await testConnection();
     if (!dbConnected) {
-      console.error('❌ Failed to connect to database. Please check your configuration.');
+      logger.error('Failed to connect to database');
       process.exit(1);
     }
-    
-    // Check if we are running in Production on Render
+
+    // Run pending migrations automatically
+    await runStartupMigrations();
+
     const isProduction = process.env.NODE_ENV === 'production';
 
     if (isProduction) {
-      // 🌐 RENDER PRODUCTION MODE: Standard HTTP Server
-      // Render handles the HTTPS layer automatically before it reaches Node.js
       app.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 Production HTTP Server running on port ${PORT}`);
-        console.log(`🌍 Environment: production`);
+        logger.info(`Production server started`, { port: PORT, env: 'production' });
       });
     } else {
-      // 💻 LOCAL DEVELOPMENT MODE: Custom HTTPS setup for your local network/camera testing
       const certPath = path.join(__dirname, '../client/192.168.1.16+2.pem');
-      const keyPath = path.join(__dirname, '../client/192.168.1.16+2-key.pem');
+      const keyPath  = path.join(__dirname, '../client/192.168.1.16+2-key.pem');
       const useHttps = fs.existsSync(certPath) && fs.existsSync(keyPath);
-      
+
       if (useHttps) {
         const httpsOptions = {
-          key: fs.readFileSync(keyPath),
-          cert: fs.readFileSync(certPath)
+          key:  fs.readFileSync(keyPath),
+          cert: fs.readFileSync(certPath),
         };
-        
         const httpsServer = https.createServer(httpsOptions, app);
         httpsServer.listen(PORT, '0.0.0.0', () => {
-          console.log(`🚀 HTTPS Server running on port ${PORT}`);
-          console.log(`📊 Local: https://localhost:${PORT}/api/health`);
-          console.log(`🌐 Network: https://0.0.0.0:${PORT}/api/health`);
-          console.log(`🔒 HTTPS Enabled (for camera access on mobile)`);
-          console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+          logger.info(`HTTPS server started`, { port: PORT });
         });
-        
-        const httpPort = 3000;
-        const httpServer = http.createServer((req, res) => {
-          res.writeHead(301, { "Location": `https://${req.headers.host.replace(httpPort, PORT)}${req.url}` });
+
+        // HTTP → HTTPS redirect
+        const httpPort   = 3000;
+        const httpServer = http.createServer((_req, res) => {
+          res.writeHead(301, { Location: `https://${_req.headers.host.replace(httpPort, PORT)}${_req.url}` });
           res.end();
         });
-        
         httpServer.listen(httpPort, '0.0.0.0', () => {
-          console.log(`↪️  HTTP Redirect server running on port ${httpPort}`);
+          logger.info(`HTTP redirect server started`, { port: httpPort });
         });
       } else {
-        // Local HTTP Fallback
-        console.log('⚠️  HTTPS certificates not found. Running in HTTP mode.');
+        logger.warn('HTTPS certificates not found — running in HTTP mode');
         app.listen(PORT, '0.0.0.0', () => {
-          console.log(`🚀 HTTP Server running on port ${PORT}`);
-          console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+          logger.info(`HTTP server started`, { port: PORT, env: process.env.NODE_ENV || 'development' });
         });
       }
     }
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    logger.error('Failed to start server', { error: error.message, stack: error.stack });
     process.exit(1);
   }
 };
