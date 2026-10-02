@@ -87,7 +87,7 @@ router.post('/verify', auth, async (req, res) => {
           course: student.course,
           year_level: student.year_level,
           enrollment_status: student.enrollment_status,
-          photo_url: student.photo_url ? `${req.protocol}://${req.get('host')}${student.photo_url}` : null
+          photo_url: student.photo_url || null  // already an absolute Cloudinary URL
         },
         accessGranted: true,
         timestamp: new Date().toISOString(),
@@ -161,7 +161,7 @@ router.post('/manual-verify', auth, async (req, res) => {
       data: {
         student: {
           ...student,
-          photo_url: student.photo_url ? `${req.protocol}://${req.get('host')}${student.photo_url}` : null
+          photo_url: student.photo_url || null  // already an absolute Cloudinary URL
         },
         accessGranted: true,
         verificationType: 'manual',
@@ -246,10 +246,10 @@ router.get('/logs', auth, async (req, res) => {
     const totalLogs = countResult[0].total;
     const totalPages = Math.ceil(totalLogs / limit);
 
-    // Transform photo URLs to full URLs
+    // photo_url is already an absolute Cloudinary URL — no transformation needed
     const logsWithFullPhotoUrls = logs.map(log => ({
       ...log,
-      photo_url: log.photo_url ? `${req.protocol}://${req.get('host')}${log.photo_url}` : null
+      photo_url: log.photo_url || null
     }));
 
     res.json({
