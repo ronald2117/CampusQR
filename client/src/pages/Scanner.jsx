@@ -10,7 +10,7 @@ const Scanner = () => {
   const [scanning, setScanning] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
-  const [location, setLocation] = useState('')
+  const [location, setLocation] = useState("AMA Computer College Lipa")
   const [scanMode, setScanMode] = useState('camera') // 'camera' | 'physical' | 'manual'
   const [manualStudentId, setManualStudentId] = useState('')
   const [manualReason, setManualReason] = useState('')
@@ -377,9 +377,8 @@ const Scanner = () => {
             <input
               type="text"
               id="location"
-              value={location}
+              value={location || "AMA Computer College Lipa"}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g., Main Gate, Library Entrance, Dormitory"
             />
           </div>
         </div>
